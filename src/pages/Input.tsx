@@ -104,6 +104,17 @@ const Input = () => {
                 setRawMessage(e.target.value);
                 setError("");
               }}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pastedText = e.clipboardData.getData('text/plain');
+                // Clean text: remove hidden characters, normalize whitespace
+                const cleanedText = pastedText
+                  .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width characters
+                  .replace(/[^\S\r\n]+/g, ' ') // Normalize spaces
+                  .trim();
+                setRawMessage(cleanedText);
+                setError("");
+              }}
               className="min-h-[300px] text-base font-normal resize-none"
               disabled={isProcessing}
             />
