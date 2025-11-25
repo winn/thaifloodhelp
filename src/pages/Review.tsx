@@ -358,10 +358,10 @@ const Review = () => {
                 onClick={handleSave}
                 disabled={
                   isSaving || 
-                  !formData.name?.trim() || 
-                  formData.name.trim() === '-' ||
-                  !formData.address?.trim() || 
-                  formData.address.trim() === '-'
+                  !formData.name || 
+                  formData.name.trim() === '' ||
+                  !formData.address || 
+                  formData.address.trim() === ''
                 }
                 size="lg"
                 className="flex-1"
