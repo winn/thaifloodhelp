@@ -27,8 +27,8 @@ serve(async (req) => {
 
     console.log('Generating embedding for text length:', text.length);
 
-    // Generate embedding using OpenAI's text-embedding-3-small model
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
+    // Generate embedding using Gemini's text-embedding-004 model via Lovable AI Gateway
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -36,8 +36,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         input: text,
-        model: 'text-embedding-3-small',
-        dimensions: 1536,
+        model: 'text-embedding-004',
       }),
     });
 
@@ -59,7 +58,7 @@ serve(async (req) => {
         );
       }
 
-      throw new Error(`OpenAI API error: ${response.status} ${errorText}`);
+      throw new Error(`Lovable AI API error: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
