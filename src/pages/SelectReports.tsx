@@ -12,6 +12,8 @@ interface ExtractedReport {
   name: string;
   lastname: string;
   raw_message: string;
+  reporter_name: string;
+  last_contact_at: string;
   address: string;
   location_lat: string;
   location_long: string;
@@ -21,6 +23,7 @@ interface ExtractedReport {
   number_of_seniors: number;
   health_condition: string;
   help_needed: string;
+  additional_info: string;
   urgency_level: number;
 }
 
@@ -119,9 +122,15 @@ const SelectReports = () => {
                           เร่งด่วน {report.urgency_level}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        รายการที่ {index + 1}
-                      </p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                        <span>รายการที่ {index + 1}</span>
+                        {report.reporter_name && (
+                          <>
+                            <span>•</span>
+                            <span>รายงานโดย: {report.reporter_name}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -130,12 +139,12 @@ const SelectReports = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium">ที่อยู่:</span>
-                    <p className="text-muted-foreground">{report.address || '(ไม่ระบุ)'}</p>
+                    <p className="text-muted-foreground">{report.address || '-'}</p>
                   </div>
                   <div>
                     <span className="font-medium">เบอร์โทร:</span>
                     <p className="text-muted-foreground">
-                      {report.phone.length > 0 ? report.phone.join(', ') : '(ไม่ระบุ)'}
+                      {report.phone.length > 0 ? report.phone.join(', ') : '-'}
                     </p>
                   </div>
                 </div>
@@ -173,6 +182,13 @@ const SelectReports = () => {
                   <div className="text-sm">
                     <span className="font-medium">ภาวะสุขภาพ:</span>{' '}
                     <span className="text-muted-foreground">{report.health_condition}</span>
+                  </div>
+                )}
+
+                {report.additional_info && (
+                  <div className="text-sm">
+                    <span className="font-medium">ข้อมูลเพิ่มเติม:</span>{' '}
+                    <span className="text-muted-foreground">{report.additional_info}</span>
                   </div>
                 )}
               </CardContent>

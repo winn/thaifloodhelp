@@ -38,13 +38,18 @@ serve(async (req) => {
 - ระดับ 5: น้ำถึงหลังคา, เด็กทารก, ผู้สูงอายุช่วยตัวเองไม่ได้, คนเจ็บ/ภาวะฉุกเฉิน
 
 แยกข้อมูลให้ครบถ้วนและถูกต้องที่สุด โดยเฉพาะ:
-- ชื่อและนามสกุล (แยกให้ชัดเจน)
+- ชื่อและนามสกุลของผู้ประสบภัย (แยกให้ชัดเจน)
+- ชื่อของผู้รายงาน/แจ้งเรื่อง (มักมาจากชื่อโปรไฟล์ที่โพสต์หรือคอมเมนต์)
+- เวลาติดต่อล่าสุด (ถ้ามีระบุ)
 - เบอร์โทรศัพท์ (เก็บเป็น array หากมีหลายเบอร์)
 - ที่อยู่แบบละเอียด
 - จำนวนผู้ประสบภัยแยกตามกลุ่มอายุ
 - ภาวะสุขภาพที่สำคัญ
 - ความช่วยเหลือที่ต้องการ
-- ประเมินระดับความเร่งด่วนตามเกณฑ์ที่กำหนด`;
+- ข้อมูลเพิ่มเติมที่สำคัญอื่นๆ
+- ประเมินระดับความเร่งด่วนตามเกณฑ์ที่กำหนด
+
+ถ้าข้อมูลใดไม่มี ให้ส่งค่าว่างมา (empty string หรือ empty array) อย่าใส่ตัวอย่างหรือข้อความอื่น`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -67,6 +72,14 @@ serve(async (req) => {
               parameters: {
                 type: 'object',
                 properties: {
+                  reporter_name: { 
+                    type: 'string', 
+                    description: 'ชื่อของผู้รายงาน/แจ้งเรื่อง ที่มาจากชื่อโปรไฟล์หรือลายเซ็นในข้อความ' 
+                  },
+                  last_contact_at: { 
+                    type: 'string', 
+                    description: 'วันเวลาที่ติดต่อล่าสุด ในรูปแบบ ISO 8601 (ถ้ามีระบุ เช่น "วันที่ 22" "เมื่อวาน")' 
+                  },
                   name: { 
                     type: 'string', 
                     description: 'ชื่อของผู้ประสบภัย' 
@@ -111,6 +124,10 @@ serve(async (req) => {
                   help_needed: { 
                     type: 'string', 
                     description: 'ความช่วยเหลือที่ต้องการ เช่น เรือ อาหาร น้ำดื่ม ยา' 
+                  },
+                  additional_info: { 
+                    type: 'string', 
+                    description: 'ข้อมูลเพิ่มเติมที่สำคัญอื่นๆ ที่ควรบันทึก' 
                   },
                   urgency_level: { 
                     type: 'integer', 
@@ -160,7 +177,9 @@ serve(async (req) => {
       return {
         ...extractedData,
         raw_message: rawMessage,
-        // Set defaults for optional fields
+        // Set defaults for optional fields - use empty string instead of examples
+        reporter_name: extractedData.reporter_name || '',
+        last_contact_at: extractedData.last_contact_at || '',
         lastname: extractedData.lastname || '',
         location_lat: extractedData.location_lat || '',
         location_long: extractedData.location_long || '',
@@ -170,6 +189,7 @@ serve(async (req) => {
         number_of_seniors: extractedData.number_of_seniors || 0,
         health_condition: extractedData.health_condition || '',
         help_needed: extractedData.help_needed || '',
+        additional_info: extractedData.additional_info || '',
         name: extractedData.name || '',
         address: extractedData.address || '',
         urgency_level: extractedData.urgency_level || 1,

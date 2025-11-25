@@ -15,6 +15,8 @@ interface ExtractedData {
   name: string;
   lastname: string;
   raw_message: string;
+  reporter_name: string;
+  last_contact_at: string;
   address: string;
   location_lat: string;
   location_long: string;
@@ -24,6 +26,7 @@ interface ExtractedData {
   number_of_seniors: number;
   health_condition: string;
   help_needed: string;
+  additional_info: string;
   urgency_level: number;
 }
 
@@ -73,6 +76,7 @@ const Review = () => {
         phone: phones,
         location_lat: formData.location_lat ? parseFloat(formData.location_lat) : null,
         location_long: formData.location_long ? parseFloat(formData.location_long) : null,
+        last_contact_at: formData.last_contact_at || null,
       };
 
       const { error } = await supabase.from('reports').insert([dataToSave]);
@@ -176,6 +180,29 @@ const Review = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label htmlFor="reporter">ผู้รายงาน/แจ้งเรื่อง</Label>
+                <Input
+                  id="reporter"
+                  value={formData.reporter_name || '-'}
+                  onChange={(e) => setFormData({ ...formData, reporter_name: e.target.value })}
+                  placeholder="-"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lastContact">วันเวลาติดต่อล่าสุด</Label>
+                <Input
+                  id="lastContact"
+                  type="datetime-local"
+                  value={formData.last_contact_at || ''}
+                  onChange={(e) => setFormData({ ...formData, last_contact_at: e.target.value })}
+                  placeholder="-"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label htmlFor="name">ชื่อ *</Label>
                 <Input
                   id="name"
@@ -199,9 +226,10 @@ const Review = () => {
               <Label htmlFor="address">ที่อยู่ *</Label>
               <Textarea
                 id="address"
-                value={formData.address}
+                value={formData.address || '-'}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 rows={3}
+                placeholder="-"
                 required
               />
             </div>
@@ -210,9 +238,9 @@ const Review = () => {
               <Label htmlFor="phone">เบอร์โทรศัพท์ (คั่นด้วยจุลภาค)</Label>
               <Input
                 id="phone"
-                value={phoneInput}
+                value={phoneInput || '-'}
                 onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder="081-234-5678, 089-999-8888"
+                placeholder="-"
               />
             </div>
 
@@ -221,9 +249,9 @@ const Review = () => {
                 <Label htmlFor="location_lat">ละติจูด</Label>
                 <Input
                   id="location_lat"
-                  value={formData.location_lat}
+                  value={formData.location_lat || '-'}
                   onChange={(e) => setFormData({ ...formData, location_lat: e.target.value })}
-                  placeholder="18.7883"
+                  placeholder="-"
                 />
               </div>
 
@@ -231,9 +259,9 @@ const Review = () => {
                 <Label htmlFor="location_long">ลองติจูด</Label>
                 <Input
                   id="location_long"
-                  value={formData.location_long}
+                  value={formData.location_long || '-'}
                   onChange={(e) => setFormData({ ...formData, location_long: e.target.value })}
-                  placeholder="98.9853"
+                  placeholder="-"
                 />
               </div>
             </div>
@@ -280,10 +308,10 @@ const Review = () => {
               <Label htmlFor="health">ภาวะสุขภาพ</Label>
               <Textarea
                 id="health"
-                value={formData.health_condition}
+                value={formData.health_condition || '-'}
                 onChange={(e) => setFormData({ ...formData, health_condition: e.target.value })}
                 rows={2}
-                placeholder="ระบุภาวะสุขภาพพิเศษ เช่น ป่วย พิการ ติดเตียง"
+                placeholder="-"
               />
             </div>
 
@@ -291,10 +319,21 @@ const Review = () => {
               <Label htmlFor="help">ความช่วยเหลือที่ต้องการ</Label>
               <Textarea
                 id="help"
-                value={formData.help_needed}
+                value={formData.help_needed || '-'}
                 onChange={(e) => setFormData({ ...formData, help_needed: e.target.value })}
                 rows={2}
-                placeholder="ระบุความช่วยเหลือที่ต้องการ เช่น เรือ อาหาร น้ำดื่ม ยา"
+                placeholder="-"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="additional">ข้อมูลเพิ่มเติม</Label>
+              <Textarea
+                id="additional"
+                value={formData.additional_info || '-'}
+                onChange={(e) => setFormData({ ...formData, additional_info: e.target.value })}
+                rows={3}
+                placeholder="-"
               />
             </div>
 

@@ -16,11 +16,13 @@ export type Database = {
     Tables: {
       reports: {
         Row: {
+          additional_info: string | null
           address: string | null
           created_at: string | null
           health_condition: string | null
           help_needed: string | null
           id: string
+          last_contact_at: string | null
           lastname: string | null
           location_lat: number | null
           location_long: number | null
@@ -30,16 +32,19 @@ export type Database = {
           number_of_seniors: number | null
           phone: string[] | null
           raw_message: string
+          reporter_name: string | null
           status: string | null
           updated_at: string | null
           urgency_level: number | null
         }
         Insert: {
+          additional_info?: string | null
           address?: string | null
           created_at?: string | null
           health_condition?: string | null
           help_needed?: string | null
           id?: string
+          last_contact_at?: string | null
           lastname?: string | null
           location_lat?: number | null
           location_long?: number | null
@@ -49,16 +54,19 @@ export type Database = {
           number_of_seniors?: number | null
           phone?: string[] | null
           raw_message: string
+          reporter_name?: string | null
           status?: string | null
           updated_at?: string | null
           urgency_level?: number | null
         }
         Update: {
+          additional_info?: string | null
           address?: string | null
           created_at?: string | null
           health_condition?: string | null
           help_needed?: string | null
           id?: string
+          last_contact_at?: string | null
           lastname?: string | null
           location_lat?: number | null
           location_long?: number | null
@@ -68,6 +76,7 @@ export type Database = {
           number_of_seniors?: number | null
           phone?: string[] | null
           raw_message?: string
+          reporter_name?: string | null
           status?: string | null
           updated_at?: string | null
           urgency_level?: number | null
