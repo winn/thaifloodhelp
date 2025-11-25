@@ -20,29 +20,32 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
     console.log('Generating embedding for text length:', text.length);
 
-    // Generate embedding using Gemini's text-embedding-004 model via Lovable AI Gateway
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
+    // Generate embedding using Google Gemini's text-embedding-004 model
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        input: text,
-        model: 'text-embedding-004',
+        model: 'models/text-embedding-004',
+        content: {
+          parts: [{
+            text: text
+          }]
+        }
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
+      console.error('Gemini API error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -50,19 +53,12 @@ serve(async (req) => {
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Payment required. Please add credits to your workspace.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
 
-      throw new Error(`Lovable AI API error: ${response.status} ${errorText}`);
+      throw new Error(`Gemini API error: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
-    const embedding = data.data[0].embedding;
+    const embedding = data.embedding.values;
 
     console.log('Successfully generated embedding with', embedding.length, 'dimensions');
 
