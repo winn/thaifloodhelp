@@ -1,6 +1,6 @@
 # 🌊 Flood Victim Management System
 
-A full-stack web platform for collecting and managing flood disaster victim information from social media posts. Designed for Thai disaster relief workers with a simple, accessible interface.
+A full-stack web platform for collecting and managing flood disaster victim information from social media posts. Designed for Thai disaster relief workers with a simple, accessible interface. Explanation of the project and Lovable tutorial https://www.youtube.com/watch?v=121fjf-JWvc
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
