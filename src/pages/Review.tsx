@@ -432,6 +432,7 @@ const Review = () => {
                 {[
                   { id: 'drowning', label: 'จมน้ำ' },
                   { id: 'trapped', label: 'ติดขัง' },
+                  { id: 'unreachable', label: 'ติดต่อไม่ได้' },
                   { id: 'water', label: 'ขาดน้ำดื่ม' },
                   { id: 'food', label: 'ขาดอาหาร' },
                   { id: 'electricity', label: 'ขาดไฟฟ้า' },
