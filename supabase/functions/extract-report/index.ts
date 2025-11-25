@@ -118,8 +118,7 @@ serve(async (req) => {
                     enum: [1, 2, 3, 4, 5]
                   }
                 },
-                required: ['name', 'address', 'urgency_level'],
-                additionalProperties: false
+                required: ['name', 'address', 'urgency_level']
               }
             }
           }
