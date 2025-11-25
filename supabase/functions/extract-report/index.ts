@@ -56,6 +56,7 @@ EXTRACTION GUIDELINES:
 - address: Copy exact address from message, preserve all details (empty if not present)
 - phone: Array of phone numbers only if present (empty array if not present)
 - location_lat/location_long: Only if GPS coordinates given (empty if not present)
+- map_link: Extract Google Maps link if present (e.g., "https://maps.google.com/...", "https://goo.gl/maps/...", "maps.app.goo.gl/..."). Copy the exact URL (empty if not present)
 - number_of_adults: Count all adults (18+ years) including patients, parents, siblings, relatives mentioned. If message says "มีแม่ พ่อ น้องชาย" count as 3 adults. Patients who are adults count in BOTH number_of_adults AND number_of_patients.
 - number_of_children: Count children (3-17 years) only if explicitly mentioned (0 if not present)
 - number_of_seniors: Count elderly people (60+ years) only if explicitly mentioned (0 if not present)
@@ -145,6 +146,10 @@ REMEMBER: When in doubt, leave it empty. Wrong data is worse than no data in a d
                     location_long: { 
                       type: 'string', 
                       description: 'ลองติจูด (ถ้ามี)' 
+                    },
+                    map_link: { 
+                      type: 'string', 
+                      description: 'ลิงก์ Google Maps (ถ้ามี เช่น https://maps.google.com/... หรือ https://goo.gl/maps/... หรือ maps.app.goo.gl/...)' 
                     },
                     phone: { 
                       type: 'array',
@@ -252,6 +257,7 @@ REMEMBER: When in doubt, leave it empty. Wrong data is worse than no data in a d
                         address: { type: 'string', description: 'ที่อยู่แบบละเอียด รวมหมู่บ้าน ซอย ถนน ตำบล อำเภอ จังหวัด' },
                         location_lat: { type: 'string', description: 'ละติจูด (ถ้ามี)' },
                         location_long: { type: 'string', description: 'ลองติจูด (ถ้ามี)' },
+                        map_link: { type: 'string', description: 'ลิงก์ Google Maps (ถ้ามี)' },
                         phone: { type: 'array', items: { type: 'string' }, description: 'เบอร์โทรศัพท์ทั้งหมด' },
                         number_of_adults: { type: 'integer', description: 'จำนวนผู้ใหญ่' },
                         number_of_children: { type: 'integer', description: 'จำนวนเด็ก (อายุต่ำกว่า 18 ปี)' },
@@ -353,6 +359,7 @@ REMEMBER: When in doubt, leave it empty. Wrong data is worse than no data in a d
         lastname: extractedData.lastname || '',
         location_lat: extractedData.location_lat || '',
         location_long: extractedData.location_long || '',
+        map_link: extractedData.map_link || '',
         phone: extractedData.phone || [],
         number_of_adults: extractedData.number_of_adults || 0,
         number_of_children: extractedData.number_of_children || 0,

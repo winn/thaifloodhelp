@@ -24,12 +24,16 @@ import {
   ChevronDown,
   ChevronRight,
   Download,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import QueryBot from "@/components/QueryBot";
 import { Checkbox } from "@/components/ui/checkbox";
 import ReportHeatmap from "@/components/ReportHeatmap";
+import { PhoneList } from "@/components/PhoneList";
 
 interface Report {
   id: string;
@@ -54,6 +58,7 @@ interface Report {
   raw_message: string;
   location_lat: number | null;
   location_long: number | null;
+  map_link: string | null;
 }
 
 const Dashboard = () => {
@@ -67,6 +72,26 @@ const Dashboard = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [forceDeepSearch, setForceDeepSearch] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedReports = [...filteredReports].sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    const aVal = a[sortColumn as keyof Report] as number || 0;
+    const bVal = b[sortColumn as keyof Report] as number || 0;
+
+    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+  });
 
   const exportToCSV = () => {
     if (filteredReports.length === 0) {
@@ -487,20 +512,80 @@ const Dashboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12"></TableHead>
-                      <TableHead>ความเร่งด่วน</TableHead>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('urgency_level')}
+                      >
+                        <div className="flex items-center gap-1">
+                          ความเร่งด่วน
+                          {sortColumn === 'urgency_level' ? (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          ) : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        </div>
+                      </TableHead>
                       <TableHead>ชื่อ-นามสกุล</TableHead>
                       <TableHead>ที่อยู่</TableHead>
                       <TableHead>เบอร์โทร</TableHead>
-                      <TableHead className="text-center">ผู้ใหญ่</TableHead>
-                      <TableHead className="text-center">เด็ก</TableHead>
-                      <TableHead className="text-center">ทารก</TableHead>
-                      <TableHead className="text-center">ผู้สูงอายุ</TableHead>
-                      <TableHead className="text-center">ผู้ป่วย</TableHead>
+                      <TableHead
+                        className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('number_of_adults')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          ผู้ใหญ่
+                          {sortColumn === 'number_of_adults' ? (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          ) : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('number_of_children')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          เด็ก
+                          {sortColumn === 'number_of_children' ? (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          ) : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('number_of_infants')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          ทารก
+                          {sortColumn === 'number_of_infants' ? (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          ) : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('number_of_seniors')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          ผู้สูงอายุ
+                          {sortColumn === 'number_of_seniors' ? (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          ) : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('number_of_patients')}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          ผู้ป่วย
+                          {sortColumn === 'number_of_patients' ? (
+                            sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                          ) : <ArrowUpDown className="h-4 w-4 opacity-30" />}
+                        </div>
+                      </TableHead>
                       <TableHead>ความช่วยเหลือ</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredReports.map((report) => {
+                    {sortedReports.map((report) => {
                       const isExpanded = expandedRows.has(report.id);
                       return (
                         <>
@@ -524,9 +609,9 @@ const Dashboard = () => {
                             <TableCell className="font-medium">
                               {report.name} {report.lastname}
                             </TableCell>
-                            <TableCell className="max-w-xs truncate">{report.address}</TableCell>
-                            <TableCell>
-                              {report.phone.length > 0 ? report.phone.join(', ') : '-'}
+                            <TableCell className="max-w-[150px] truncate">{report.address}</TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <PhoneList phones={report.phone} />
                             </TableCell>
                             <TableCell className="text-center">{report.number_of_adults}</TableCell>
                             <TableCell className="text-center">{report.number_of_children}</TableCell>
@@ -545,11 +630,24 @@ const Dashboard = () => {
                                     <div>
                                       <h4 className="font-semibold mb-2">ข้อมูลทั่วไป</h4>
                                       <div className="space-y-1 text-sm">
-                                        <p className="break-words"><span className="font-medium">ชื่อ:</span> {report.name} {report.lastname}</p>
-                                        <p className="break-words"><span className="font-medium">ผู้รายงาน:</span> {report.reporter_name || '-'}</p>
-                                        <p className="break-words"><span className="font-medium">ที่อยู่:</span> {report.address || '-'}</p>
-                                        <p className="break-words"><span className="font-medium">เบอร์โทร:</span> {report.phone?.length > 0 ? report.phone.join(', ') : '-'}</p>
-                                        <p className="break-words"><span className="font-medium">ตำแหน่ง:</span> {report.location_lat && report.location_long ? `${report.location_lat}, ${report.location_long}` : '-'}</p>
+                                         <p className="break-words"><span className="font-medium">ชื่อ:</span> {report.name} {report.lastname}</p>
+                                         <p className="break-words"><span className="font-medium">ผู้รายงาน:</span> {report.reporter_name || '-'}</p>
+                                         <p className="break-words"><span className="font-medium">ที่อยู่:</span> {report.address || '-'}</p>
+                                         <div className="break-words"><span className="font-medium">เบอร์โทร:</span> <PhoneList phones={report.phone || []} /></div>
+                                         <p className="break-words"><span className="font-medium">ตำแหน่ง:</span> {report.location_lat && report.location_long ? `${report.location_lat}, ${report.location_long}` : '-'}</p>
+                                         {report.map_link && (
+                                           <p className="break-words">
+                                             <span className="font-medium">Google Maps:</span>{' '}
+                                             <a 
+                                               href={report.map_link} 
+                                               target="_blank" 
+                                               rel="noopener noreferrer"
+                                               className="text-primary hover:underline"
+                                             >
+                                               เปิดแผนที่ 🗺️
+                                             </a>
+                                           </p>
+                                         )}
                                       </div>
                                     </div>
                                     <div>

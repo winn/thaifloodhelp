@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, CheckCircle, AlertCircle, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { PhoneList } from "@/components/PhoneList";
 
 interface ExtractedReport {
   name: string;
@@ -143,9 +144,9 @@ const SelectReports = () => {
                   </div>
                   <div>
                     <span className="font-medium">เบอร์โทร:</span>
-                    <p className="text-muted-foreground">
-                      {report.phone.length > 0 ? report.phone.join(', ') : '-'}
-                    </p>
+                    <div className="text-muted-foreground">
+                      <PhoneList phones={report.phone} />
+                    </div>
                   </div>
                 </div>
 

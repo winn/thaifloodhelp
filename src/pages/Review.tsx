@@ -22,6 +22,7 @@ interface ExtractedData {
   address: string;
   location_lat: string;
   location_long: string;
+  map_link: string;
   phone: string[];
   number_of_adults: number;
   number_of_children: number;
@@ -124,6 +125,7 @@ const Review = () => {
         phone: phones,
         location_lat: formData.location_lat ? parseFloat(formData.location_lat) : null,
         location_long: formData.location_long ? parseFloat(formData.location_long) : null,
+        map_link: formData.map_link || null,
         last_contact_at: validLastContact,
         embedding: embeddingError ? null : embeddingData.embedding,
         number_of_patients: formData.number_of_patients || 0,
@@ -363,6 +365,16 @@ const Review = () => {
                   placeholder="-"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="map_link">ลิงก์ Google Maps</Label>
+              <Input
+                id="map_link"
+                value={formData.map_link || '-'}
+                onChange={(e) => setFormData({ ...formData, map_link: e.target.value })}
+                placeholder="https://maps.google.com/... หรือ https://goo.gl/maps/..."
+              />
             </div>
 
             <div className="space-y-4">

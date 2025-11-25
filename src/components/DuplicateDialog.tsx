@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle } from "lucide-react";
+import { PhoneList } from "@/components/PhoneList";
 
 interface DuplicateReport {
   id: string;
@@ -74,9 +75,7 @@ export const DuplicateDialog = ({
                     {duplicate.phone && duplicate.phone.length > 0 && (
                       <div className="text-sm">
                         <span className="font-medium">เบอร์:</span>{' '}
-                        <span className="text-muted-foreground">
-                          {duplicate.phone.join(', ')}
-                        </span>
+                        <PhoneList phones={duplicate.phone} />
                       </div>
                     )}
                   </div>
