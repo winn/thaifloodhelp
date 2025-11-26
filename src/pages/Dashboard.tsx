@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -775,9 +775,8 @@ const Dashboard = () => {
                     {paginatedReports.map((report) => {
                       const isExpanded = expandedRows.has(report.id);
                       return (
-                        <>
+                        <React.Fragment key={report.id}>
                           <TableRow
-                            key={report.id}
                             className="cursor-pointer hover:bg-muted/50"
                             onClick={() => toggleRowExpansion(report.id)}
                           >
@@ -877,7 +876,7 @@ const Dashboard = () => {
                             </TableCell>
                           </TableRow>
                           {isExpanded && (
-                            <TableRow key={`${report.id}-expanded`}>
+                            <TableRow>
                               <TableCell colSpan={16} className="bg-muted/30 p-6">
                                 <div className="space-y-4">
                                   <div className="flex justify-end">
@@ -988,7 +987,7 @@ const Dashboard = () => {
                               </TableCell>
                             </TableRow>
                           )}
-                        </>
+                        </React.Fragment>
                       );
                     })}
                   </TableBody>
