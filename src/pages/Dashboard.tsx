@@ -306,15 +306,16 @@ const Dashboard = () => {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
+      // Use pagination at database level - load 200 most recent reports
       const { data, error } = await supabase
         .from('reports')
         .select('*')
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false })
+        .limit(200);
 
       if (error) throw error;
 
       // Map data to ensure line_user_id and line_display_name fields exist
-      // Cast to any to handle fields that may not exist in DB yet
       const mappedData: Report[] = (data || []).map((report: any) => ({
         ...report,
         line_user_id: report.line_user_id ?? null,
