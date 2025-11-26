@@ -111,7 +111,7 @@ const Map = () => {
     }
 
     return (
-        <div className="h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white">
+        <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white">
             {/* Header */}
             <div className="bg-white shadow-sm border-b px-4 py-4">
                 <div className="max-w-7xl mx-auto">
@@ -238,7 +238,7 @@ const Map = () => {
 
                 {/* Map Container */}
                 <Card className="flex-1 p-0 overflow-hidden relative">
-                    <div className="h-full w-full">
+                    <div className="w-full h-[60vh] lg:h-full">
                         <InteractiveMap
                             reports={filteredReports}
                             center={[13.7563, 100.5018]}

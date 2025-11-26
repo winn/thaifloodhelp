@@ -265,6 +265,11 @@
   .map-legend {
     display: none;
   }
+
+  .map-container {
+    height: 60vh;
+    min-height: 640px;
+  }
 }
 
 /* Loading and error states */
