@@ -490,8 +490,8 @@ const Review = () => {
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="bg-destructive text-destructive-foreground">
-                        <p className="font-medium">⚠️ Geocoding อาจมีความคลาดเคลื่อน</p>
-                        <p className="text-xs">กรุณาตรวจสอบพิกัดให้แน่ใจค่ะ</p>
+                        <p className="font-medium">⚠️ ใช้ AI สกัดพิกัด อาจมีความคลาดเคลื่อน</p>
+                        <p className="text-xs">กรุณาตรวจสอบค่ะ</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -523,8 +523,8 @@ const Review = () => {
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="bg-destructive text-destructive-foreground">
-                        <p className="font-medium">⚠️ Geocoding อาจมีความคลาดเคลื่อน</p>
-                        <p className="text-xs">กรุณาตรวจสอบพิกัดให้แน่ใจค่ะ</p>
+                        <p className="font-medium">⚠️ ใช้ AI สกัดพิกัด อาจมีความคลาดเคลื่อน</p>
+                        <p className="text-xs">กรุณาตรวจสอบค่ะ</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -540,35 +540,41 @@ const Review = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="map_link">ลิงก์ Google Maps</Label>
-              {!formData.raw_message?.match(/(maps\.google\.com|goo\.gl|google\.com\/maps|maps\.app\.goo\.gl)/i) ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="relative">
-                        <Input
-                          id="map_link"
-                          value={formData.map_link || '-'}
-                          onChange={(e) => setFormData({ ...formData, map_link: e.target.value })}
-                          placeholder="https://maps.google.com/... หรือ https://goo.gl/maps/..."
-                          className="border-destructive/50 hover:border-destructive focus:border-destructive pr-8"
-                        />
-                        <AlertTriangle className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="bg-destructive text-destructive-foreground">
-                      <p className="font-medium">⚠️ Geocoding อาจมีความคลาดเคลื่อน</p>
-                      <p className="text-xs">กรุณาตรวจสอบพิกัดให้แน่ใจค่ะ</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="map_link">ตำแหน่งบนแผนที่</Label>
+                {!formData.raw_message?.match(/(maps\.google\.com|goo\.gl|google\.com\/maps|maps\.app\.goo\.gl)/i) && (
+                  <Badge variant="destructive" className="text-xs">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    ใช้ AI สกัดพิกัด อาจมีความคลาดเคลื่อน
+                  </Badge>
+                )}
+              </div>
+              {formData.location_lat && formData.location_long && 
+               formData.location_lat !== '-' && formData.location_long !== '-' ? (
+                <div className="space-y-2">
+                  <div className="rounded-lg overflow-hidden border border-border shadow-sm">
+                    <iframe
+                      src={`https://maps.google.com/maps?q=${formData.location_lat},${formData.location_long}&output=embed&z=15`}
+                      width="100%"
+                      height="300"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      title="Google Maps Location"
+                    />
+                  </div>
+                  <Input
+                    id="map_link"
+                    value={formData.map_link || '-'}
+                    onChange={(e) => setFormData({ ...formData, map_link: e.target.value })}
+                    placeholder="https://maps.google.com/... หรือ https://goo.gl/maps/..."
+                    className="text-xs"
+                  />
+                </div>
               ) : (
-                <Input
-                  id="map_link"
-                  value={formData.map_link || '-'}
-                  onChange={(e) => setFormData({ ...formData, map_link: e.target.value })}
-                  placeholder="https://maps.google.com/... หรือ https://goo.gl/maps/..."
-                />
+                <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">
+                  ยังไม่มีพิกัด - กรุณากรอกละติจูดและลองติจูดเพื่อแสดงแผนที่
+                </div>
               )}
             </div>
 
