@@ -173,6 +173,28 @@ const Review = () => {
         }
       }
 
+      // Try to parse map_link if present and no coordinates yet
+      let finalLat = formData.location_lat ? parseFloat(formData.location_lat) : null;
+      let finalLng = formData.location_long ? parseFloat(formData.location_long) : null;
+      
+      if (formData.map_link && formData.map_link !== '-' && (!finalLat || !finalLng)) {
+        try {
+          const { data: mapData, error: mapError } = await supabase.functions.invoke(
+            'parse-map-link',
+            { body: { mapLink: formData.map_link } }
+          );
+          
+          if (!mapError && mapData.success) {
+            finalLat = mapData.lat;
+            finalLng = mapData.lng;
+            console.log('Successfully parsed map link:', mapData);
+          }
+        } catch (err) {
+          console.error('Error parsing map link:', err);
+          // Continue with save even if map parsing fails
+        }
+      }
+
       // Generate embedding for the report
       const { data: embeddingData, error: embeddingError } = await supabase.functions.invoke(
         'generate-embedding',
@@ -183,8 +205,8 @@ const Review = () => {
         ...formData,
         name: formData.name && formData.name !== '-' ? formData.name : 'ไม่ระบุชื่อ',
         phone: phones,
-        location_lat: formData.location_lat ? parseFloat(formData.location_lat) : null,
-        location_long: formData.location_long ? parseFloat(formData.location_long) : null,
+        location_lat: finalLat,
+        location_long: finalLng,
         map_link: formData.map_link || null,
         last_contact_at: validLastContact,
         embedding: embeddingError ? null : embeddingData.embedding,
