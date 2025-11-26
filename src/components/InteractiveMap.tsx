@@ -141,12 +141,16 @@ const InteractiveMap = ({
             },
         });
 
-        // Add markers for each report with valid location within Thailand
+        // Add markers for each report with valid location within Thailand only
         const validReports = reports.filter((report) => {
-            const lat = parseFloat(report.location_lat?.toString() || '0');
-            const lng = parseFloat(report.location_long?.toString() || '0');
+            // Skip if no location data
+            if (!report.location_lat || !report.location_long) return false;
+            
+            const lat = parseFloat(report.location_lat.toString());
+            const lng = parseFloat(report.location_long.toString());
 
-            // Filter for locations within Thailand bounds
+            // Strict filter: Only locations within Thailand bounds
+            // Thailand: roughly 5.6°N to 20.5°N, 97.3°E to 105.6°E
             return (
                 !isNaN(lat) &&
                 !isNaN(lng) &&
@@ -247,12 +251,29 @@ const InteractiveMap = ({
         markersRef.current = markers;
         mapRef.current.addLayer(markers);
 
-        // Fit bounds to show all markers if there are any
+        // Fit bounds to show all markers if there are any, but stay within Thailand
         if (validReports.length > 0 && mapRef.current) {
             const bounds = markers.getBounds();
             if (bounds.isValid()) {
-                mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+                // Ensure bounds are within Thailand
+                const thailandBounds = L.latLngBounds([5.6, 97.3], [20.5, 105.6]);
+                const constrainedBounds = bounds.pad(0.1);
+                
+                // Only fit if bounds are reasonable
+                if (thailandBounds.contains(constrainedBounds.getCenter())) {
+                    mapRef.current.fitBounds(constrainedBounds, { 
+                        padding: [50, 50], 
+                        maxZoom: 15,
+                        animate: false 
+                    });
+                } else {
+                    // Default to Thailand center if bounds are outside
+                    mapRef.current.setView([13.7563, 100.5018], 6);
+                }
             }
+        } else if (mapRef.current) {
+            // No valid reports, show Thailand center
+            mapRef.current.setView([13.7563, 100.5018], 6);
         }
     }, [reports, navigate]);
 
