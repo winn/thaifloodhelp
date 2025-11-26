@@ -14,3 +14,12 @@ verify_jwt = false
 
 [functions.search-reports]
 verify_jwt = false
+
+[functions.api-v1-extract]
+verify_jwt = false
+
+[functions.api-v1-save]
+verify_jwt = false
+
+[functions.api-v1-ocr]
+verify_jwt = false

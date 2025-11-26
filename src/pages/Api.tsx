@@ -17,13 +17,22 @@ const Api = () => {
   const [saveResponse, setSaveResponse] = useState("");
   const [saveLoading, setSaveLoading] = useState(false);
   
+  const [ocrInput, setOcrInput] = useState("");
+  const [ocrResponse, setOcrResponse] = useState("");
+  const [ocrLoading, setOcrLoading] = useState(false);
+  
   const [copiedExtract, setCopiedExtract] = useState(false);
   const [copiedSave, setCopiedSave] = useState(false);
+  const [copiedOcr, setCopiedOcr] = useState(false);
 
   const API_BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
   const extractExample = JSON.stringify({
     message: "ช่วยด้วยครับ คุณสมชาย ใจดี อยู่บ้านเลขที่ 123 หมู่ 5 ตำบลบ้านใหม่ อำเภอเมือง จังหวัดเชียงใหม่ โทร 081-234-5678 น้ำท่วมบ้านสูง 1 เมตร มีผู้สูงอายุ 2 คน เด็ก 3 คน ต้องการอาหารและน้ำดื่มเร่งด่วน"
+  }, null, 2);
+
+  const ocrExample = JSON.stringify({
+    image: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QBMRXhpZgAATU0AKgAAAAgAAgESAAMAAAABAAEAAIdpAAQAAAABAAAAJgAAAAAAAqACAAQAAAABAAAAZKADAAQAAAABAAAAZAAAAAD/..."
   }, null, 2);
 
   const saveExample = JSON.stringify({
@@ -131,14 +140,59 @@ const Api = () => {
     }
   };
 
-  const copyToClipboard = (text: string, type: "extract" | "save") => {
+  const handleOcr = async () => {
+    if (!ocrInput.trim()) {
+      toast.error("กรุณาใส่ข้อมูล JSON");
+      return;
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse(ocrInput);
+    } catch {
+      toast.error("รูปแบบ JSON ไม่ถูกต้อง");
+      return;
+    }
+
+    setOcrLoading(true);
+    setOcrResponse("");
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api-v1-ocr`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      setOcrResponse(JSON.stringify(data, null, 2));
+      
+      if (response.ok) {
+        toast.success("อ่านข้อความจากรูปภาพสำเร็จ");
+      } else {
+        toast.error(`เกิดข้อผิดพลาด: ${response.status}`);
+      }
+    } catch (error) {
+      toast.error("ไม่สามารถเชื่อมต่อ API ได้");
+      setOcrResponse(JSON.stringify({ error: String(error) }, null, 2));
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string, type: "extract" | "save" | "ocr") => {
     navigator.clipboard.writeText(text);
     if (type === "extract") {
       setCopiedExtract(true);
       setTimeout(() => setCopiedExtract(false), 2000);
-    } else {
+    } else if (type === "save") {
       setCopiedSave(true);
       setTimeout(() => setCopiedSave(false), 2000);
+    } else {
+      setCopiedOcr(true);
+      setTimeout(() => setCopiedOcr(false), 2000);
     }
     toast.success("คัดลอกแล้ว");
   };
@@ -176,8 +230,9 @@ const Api = () => {
         </Card>
 
         <Tabs defaultValue="extract" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="extract">Extract API</TabsTrigger>
+            <TabsTrigger value="ocr">OCR API</TabsTrigger>
             <TabsTrigger value="save">Save API</TabsTrigger>
           </TabsList>
 
