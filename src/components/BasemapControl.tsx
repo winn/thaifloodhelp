@@ -2,16 +2,22 @@ import { useState, useEffect, useRef } from 'react';
 import { Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { BASEMAP_OPTIONS } from '@/types/map';
 
 interface BasemapControlProps {
   selectedBasemap: string;
   onBasemapChange: (basemapId: string) => void;
+  showFloodLayer: boolean;
+  onFloodLayerToggle: (show: boolean) => void;
 }
 
 const BasemapControl = ({
   selectedBasemap,
   onBasemapChange,
+  showFloodLayer,
+  onFloodLayerToggle,
 }: BasemapControlProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -50,7 +56,7 @@ const BasemapControl = ({
       </Button>
 
       {isOpen && (
-        <Card className="absolute top-12 right-0 p-2 w-40 shadow-xl bg-white/95 backdrop-blur-sm">
+        <Card className="absolute top-12 right-0 p-2 w-48 shadow-xl bg-white/95 backdrop-blur-sm">
           <div className="space-y-1">
             {BASEMAP_OPTIONS.map((basemap) => (
               <button
@@ -68,6 +74,23 @@ const BasemapControl = ({
                 {basemap.name}
               </button>
             ))}
+          </div>
+
+          {/* Flood Layer Toggle */}
+          <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="flex items-center space-x-2 px-3 py-2">
+              <Checkbox
+                id="flood-layer"
+                checked={showFloodLayer}
+                onCheckedChange={(checked) => onFloodLayerToggle(checked === true)}
+              />
+              <Label
+                htmlFor="flood-layer"
+                className="text-sm font-normal cursor-pointer text-gray-900"
+              >
+                พื้นที่น้ำท่วม
+              </Label>
+            </div>
           </div>
         </Card>
       )}

@@ -112,17 +112,21 @@ All colors MUST be HSL.
 
   html {
     width: 100%;
+    overflow-y: scroll;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     padding-right: 0 !important;
+    margin-right: 0 !important;
   }
 
-  /* Prevent layout shift when Sheet/Dialog opens */
-  body[data-scroll-locked] {
+  /* Prevent layout shift when Sheet/Dialog opens - force scrollbar to always show */
+  body[data-scroll-locked],
+  body[data-radix-scroll-locked] {
     overflow-y: scroll !important;
     padding-right: 0 !important;
+    margin-right: 0 !important;
   }
 
   h1, h2, h3, h4, h5, h6 {

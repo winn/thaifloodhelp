@@ -18,6 +18,16 @@
   z-index: 0;
 }
 
+/* Ensure proper z-index for Leaflet panes */
+/* This guarantees permanent layer ordering regardless of add/remove operations */
+.leaflet-marker-pane {
+  z-index: 600 !important;
+}
+
+.leaflet-shadow-pane {
+  z-index: 500 !important;
+}
+
 /* Custom marker styles by urgency level */
 .urgency-marker {
   background-color: white;

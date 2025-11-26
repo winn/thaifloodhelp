@@ -59,6 +59,7 @@ const Dashboard = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 50;
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -101,12 +102,14 @@ const Dashboard = () => {
     return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
   });
 
-  // Pagination
-  const totalPages = Math.ceil(sortedReports.length / itemsPerPage);
-  const paginatedReports = sortedReports.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Pagination (server-side)
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+  // Handle page change - fetch new data from server
+  const handlePageChange = async (newPage: number) => {
+    setCurrentPage(newPage);
+    await fetchReports(newPage);
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -291,14 +294,26 @@ const Dashboard = () => {
     return () => clearTimeout(timeoutId);
   }, [reports, searchTerm, manualSearchTerm, urgencyFilter, statusFilter, selectedCategories, forceDeepSearch, useManualSearch]);
 
-  const fetchReports = async () => {
+  const fetchReports = async (page: number = currentPage) => {
     setIsLoading(true);
     try {
+      // Calculate offset for pagination
+      const offset = (page - 1) * itemsPerPage;
+
+      // Get total count first
+      const { count, error: countError } = await supabase
+        .from('reports')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) throw countError;
+      setTotalCount(count || 0);
+
+      // Fetch paginated data
       const { data, error } = await supabase
         .from('reports')
         .select('*')
         .order('updated_at', { ascending: false })
-        .limit(200);
+        .range(offset, offset + itemsPerPage - 1);
 
       if (error) throw error;
 
@@ -592,7 +607,7 @@ const Dashboard = () => {
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div className="text-sm text-muted-foreground">
-            ทั้งหมด {sortedReports.length} รายการ
+            ทั้งหมด {totalCount} รายการ
             {totalPages > 1 && ` • หน้า ${currentPage}/${totalPages}`}
           </div>
           <div className="flex gap-2 flex-wrap w-full sm:w-auto">
@@ -753,7 +768,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedReports.map((report) => {
+                    {sortedReports.map((report) => {
                       const isExpanded = expandedRows.has(report.id);
                       return (
                         <React.Fragment key={report.id}>
@@ -978,14 +993,14 @@ const Dashboard = () => {
                 {totalPages > 1 && (
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t">
                     <div className="text-sm text-muted-foreground text-center sm:text-left">
-                      แสดง {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, sortedReports.length)} จาก {sortedReports.length} รายการ
+                      แสดง {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalCount)} จาก {totalCount} รายการ
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-center">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(1)}
-                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1 || isLoading}
                         className="hidden sm:inline-flex"
                       >
                         หน้าแรก
@@ -993,8 +1008,8 @@ const Dashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1 || isLoading}
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
@@ -1004,16 +1019,16 @@ const Dashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages || isLoading}
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(totalPages)}
-                        disabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages || isLoading}
                         className="hidden sm:inline-flex"
                       >
                         หน้าสุดท้าย

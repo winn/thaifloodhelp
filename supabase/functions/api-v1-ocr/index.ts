@@ -137,7 +137,22 @@ serve(async (req) => {
       base64Data = matches[2];
     }
 
-    console.log('Processing OCR request, mime type:', mimeType);
+    // Check file size (base64 string length * 3/4 gives approximate bytes)
+    const fileSizeInBytes = Math.ceil((base64Data.length * 3) / 4);
+    const maxSizeInBytes = 10 * 1024 * 1024; // 10MB limit
+    
+    if (fileSizeInBytes > maxSizeInBytes) {
+      await logApiUsage(validation.apiKeyId!, '/api/v1/ocr', false, supabase);
+      return new Response(
+        JSON.stringify({ 
+          error: 'ไฟล์ใหญ่เกินไป',
+          details: `ขนาดไฟล์: ${(fileSizeInBytes / 1024 / 1024).toFixed(2)} MB, ขนาดสูงสุดที่อนุญาต: ${(maxSizeInBytes / 1024 / 1024).toFixed(2)} MB`
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Processing OCR request, mime type:', mimeType, 'file size:', (fileSizeInBytes / 1024 / 1024).toFixed(2), 'MB');
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',

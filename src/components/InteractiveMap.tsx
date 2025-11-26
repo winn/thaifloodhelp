@@ -31,6 +31,7 @@ interface InteractiveMapProps {
     zoom?: number;
     showLegend?: boolean;
     selectedBasemap?: string;
+    showFloodLayer?: boolean;
 }
 
 const URGENCY_COLORS = {
@@ -47,12 +48,40 @@ const InteractiveMap = ({
     zoom = 6,
     showLegend = true,
     selectedBasemap = 'osm',
+    showFloodLayer = false,
 }: InteractiveMapProps) => {
     const mapRef = useRef<L.Map | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const markersRef = useRef<any>(null);
     const basemapLayerRef = useRef<L.TileLayer | null>(null);
+    const floodLayerRef = useRef<L.TileLayer | null>(null);
     const navigate = useNavigate();
+
+    // Ensure marker cluster is attached to the map (useful after basemap/flood toggles)
+    const ensureMarkersOnMap = () => {
+        if (!mapRef.current || !markersRef.current) return;
+
+        if (!mapRef.current.hasLayer(markersRef.current)) {
+            mapRef.current.addLayer(markersRef.current);
+
+            // Refresh clusters in case internal state got out-of-sync
+            if (markersRef.current.refreshClusters) {
+                markersRef.current.refreshClusters();
+            }
+        }
+    };
+
+    // Ensure flood overlay stays mounted when swapping basemaps
+    const ensureFloodLayerOnMap = () => {
+        if (!mapRef.current || !floodLayerRef.current || !showFloodLayer) return;
+
+        if (!mapRef.current.hasLayer(floodLayerRef.current)) {
+            floodLayerRef.current.addTo(mapRef.current);
+            if (floodLayerRef.current.bringToFront) floodLayerRef.current.bringToFront();
+        } else if (floodLayerRef.current.bringToFront) {
+            floodLayerRef.current.bringToFront();
+        }
+    };
 
     useEffect(() => {
         if (!mapContainerRef.current || mapRef.current) return;
@@ -75,26 +104,25 @@ const InteractiveMap = ({
 
         mapRef.current = map;
 
+        // Create custom panes for layer ordering (using z-index)
+        // This ensures permanent layer ordering without needing bringToFront/bringToBack
+        map.createPane('basemapPane');
+        map.getPane('basemapPane')!.style.zIndex = '100'; // Basemap at bottom
+
+        map.createPane('floodPane');
+        map.getPane('floodPane')!.style.zIndex = '200'; // Flood layer in middle
+
+        // markerPane already exists with default z-index = 600 (on top)
+
         // Add initial basemap tile layer
         const basemapOption = BASEMAP_OPTIONS.find(b => b.id === selectedBasemap) || BASEMAP_OPTIONS[0];
         const basemapLayer = L.tileLayer(basemapOption.url, {
             attribution: basemapOption.attribution,
             maxZoom: basemapOption.maxZoom || 19,
+            pane: 'basemapPane', // Use custom pane for permanent ordering
         }).addTo(map);
-
-        // Ensure basemap stays behind markers
-        basemapLayer.bringToBack();
 
         basemapLayerRef.current = basemapLayer;
-
-        // Add GISTDA flood map overlay (WMTS) with API key
-        const gistdaApiKey = import.meta.env.VITE_GISTDA_API_KEY;
-        L.tileLayer(`https://api-gateway.gistda.or.th/api/2.0/resources/maps/flood/3days/wmts/{z}/{x}/{y}.png?api_key=${gistdaApiKey}`, {
-            attribution: '&copy; <a href="https://www.gistda.or.th">GISTDA</a>',
-            maxZoom: 19,
-            minZoom: 0,
-            opacity: 0.6, // Make flood layer semi-transparent
-        }).addTo(map);
 
         // Add legend if enabled
         if (showLegend) {
@@ -145,22 +173,54 @@ const InteractiveMap = ({
         // Remove old basemap
         mapRef.current.removeLayer(basemapLayerRef.current);
 
-        // Add new basemap
+        // Add new basemap using custom pane (ensures permanent layer ordering)
         const newBasemapLayer = L.tileLayer(basemapOption.url, {
             attribution: basemapOption.attribution,
             maxZoom: basemapOption.maxZoom || 19,
+            pane: 'basemapPane', // Use custom pane - no need for bringToBack/bringToFront
         }).addTo(mapRef.current);
 
-        // Ensure basemap stays behind markers
-        newBasemapLayer.bringToBack();
+        basemapLayerRef.current = newBasemapLayer;
 
-        // Bring markers to front if they exist
-        if (markersRef.current && mapRef.current.hasLayer(markersRef.current)) {
-            markersRef.current.bringToFront();
+        // Basemap swaps can occasionally unset overlay layers; make sure markers stay mounted
+        ensureMarkersOnMap();
+        ensureFloodLayerOnMap();
+    }, [selectedBasemap]);
+
+    // Handle flood layer toggle
+    useEffect(() => {
+        if (!mapRef.current) return;
+
+        const gistdaApiKey = import.meta.env.VITE_GISTDA_API_KEY;
+
+        if (showFloodLayer) {
+            // Add flood layer if it doesn't exist
+            if (!floodLayerRef.current) {
+                const floodLayer = L.tileLayer(
+                    `https://api-gateway.gistda.or.th/api/2.0/resources/maps/flood/3days/wmts/{z}/{x}/{y}.png?api_key=${gistdaApiKey}`,
+                    {
+                        attribution: '&copy; <a href="https://www.gistda.or.th">GISTDA</a>',
+                        maxZoom: 19,
+                        minZoom: 0,
+                        opacity: 0.6,
+                        pane: 'floodPane', // Use custom pane - ensures permanent layer ordering
+                    }
+                ).addTo(mapRef.current);
+
+                floodLayerRef.current = floodLayer;
+            }
+            ensureFloodLayerOnMap();
+        } else {
+            // Remove flood layer if it exists
+            if (floodLayerRef.current && mapRef.current.hasLayer(floodLayerRef.current)) {
+                mapRef.current.removeLayer(floodLayerRef.current);
+                floodLayerRef.current = null;
+            }
         }
 
-        basemapLayerRef.current = newBasemapLayer;
-    }, [selectedBasemap]);
+        // Flood layer add/remove can occasionally reorder panes; ensure markers remain visible
+        ensureMarkersOnMap();
+    }, [showFloodLayer]);
 
     // Update markers when reports change
     useEffect(() => {
@@ -216,7 +276,9 @@ const InteractiveMap = ({
         validReports.forEach((report) => {
             const { location_lat, location_long, urgency_level } = report;
 
-            if (location_lat === null || location_long === null) return;
+            if (location_lat === null || location_long === null) {
+                return;
+            }
 
             const urgencyColors = URGENCY_COLORS[urgency_level as keyof typeof URGENCY_COLORS] ||
                 URGENCY_COLORS[3];
@@ -299,14 +361,23 @@ const InteractiveMap = ({
                 }
             });
 
+            // Add marker to cluster
             markers.addLayer(marker);
         });
 
+        // Set the ref BEFORE adding to map
         markersRef.current = markers;
+
+        // Add to map
         mapRef.current.addLayer(markers);
 
-        // Ensure markers stay on top of basemap
-        markers.bringToFront();
+        // Force cluster to update
+        if (markers.refreshClusters) {
+            markers.refreshClusters();
+        }
+
+        // Markers automatically stay on top via markerPane (z-index = 600)
+        // No need for bringToFront() - panes handle layer ordering!
 
         // DON'T auto-fit bounds - let user control the view
         // Only set initial view if this is the first load (no previous markers)

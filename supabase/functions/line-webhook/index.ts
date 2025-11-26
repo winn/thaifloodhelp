@@ -67,7 +67,16 @@ async function getImageContent(messageId: string, channelAccessToken: string): P
   }
 
   const buffer = await response.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const bytes = new Uint8Array(buffer);
+
+  // Convert to base64 in chunks to avoid stack overflow
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+  }
+  const base64 = btoa(binary);
   return `data:image/jpeg;base64,${base64}`;
 }
 
@@ -191,8 +200,9 @@ function getHelpCategoryName(category: string): string {
   return categories[category] || category;
 }
 
-// Create Flex Message for report review (embed report data in postback)
-function createReviewFlexMessage(report: any, reportIndex: number, lineUserId: string, lineDisplayName: string): any {
+// Create Flex Message for report review
+// Use messageId as session key - postback data limit is 300 chars
+function createReviewFlexMessage(report: any, reportIndex: number, messageId: string): any {
   const totalPeople = (report.number_of_adults || 0) +
                       (report.number_of_children || 0) +
                       (report.number_of_infants || 0) +
@@ -330,14 +340,8 @@ function createReviewFlexMessage(report: any, reportIndex: number, lineUserId: s
     ]
   });
 
-  // Encode report data in postback (base64 encoded JSON)
-  const reportData = {
-    ...report,
-    line_user_id: lineUserId,
-    line_display_name: lineDisplayName
-  };
-  const encodedData = btoa(encodeURIComponent(JSON.stringify(reportData)));
-
+  // Postback data: use messageId as session key + report index
+  // Format: "a=s&m=<messageId>&i=<index>" (short keys to save space)
   return {
     type: "flex",
     altText: `รายงานขอความช่วยเหลือ #${reportIndex + 1}`,
@@ -374,7 +378,7 @@ function createReviewFlexMessage(report: any, reportIndex: number, lineUserId: s
             action: {
               type: "postback",
               label: "ยืนยันส่งรายงาน",
-              data: `action=submit&data=${encodedData}`
+              data: `a=s&m=${messageId}&i=${reportIndex}`
             }
           },
           {
@@ -383,7 +387,7 @@ function createReviewFlexMessage(report: any, reportIndex: number, lineUserId: s
             action: {
               type: "postback",
               label: "ยกเลิก",
-              data: `action=cancel`
+              data: `a=c&m=${messageId}&i=${reportIndex}`
             }
           }
         ]
@@ -435,7 +439,61 @@ function createThankYouMessage(): any {
   };
 }
 
-serve(async (req) => {
+// Session management functions using Supabase
+// Use messageId as session key (unique per message)
+async function saveSession(supabase: any, messageId: string, sessionData: any): Promise<void> {
+  const { error } = await supabase
+    .from('line_sessions')
+    .upsert({
+      message_id: messageId,
+      session_data: sessionData,
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'message_id'
+    });
+
+  if (error) {
+    console.error('Failed to save session:', error);
+    throw error;
+  }
+}
+
+async function getSession(supabase: any, messageId: string): Promise<any | null> {
+  const { data, error } = await supabase
+    .from('line_sessions')
+    .select('session_data, updated_at')
+    .eq('message_id', messageId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null;
+    }
+    console.error('Failed to get session:', error);
+    return null;
+  }
+
+  // Check if session is expired (30 minutes)
+  const updatedAt = new Date(data.updated_at);
+  const now = new Date();
+  const diffMinutes = (now.getTime() - updatedAt.getTime()) / (1000 * 60);
+
+  if (diffMinutes > 30) {
+    await deleteSession(supabase, messageId);
+    return null;
+  }
+
+  return data.session_data;
+}
+
+async function deleteSession(supabase: any, messageId: string): Promise<void> {
+  await supabase
+    .from('line_sessions')
+    .delete()
+    .eq('message_id', messageId);
+}
+
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -472,6 +530,7 @@ serve(async (req) => {
       // Handle message events
       if (event.type === 'message') {
         const message = event.message;
+        const messageId = message.id; // Use messageId as session key
         let rawMessage = '';
 
         // Handle text message
@@ -482,7 +541,7 @@ serve(async (req) => {
         else if (message.type === 'image') {
           try {
             // Get image content from LINE
-            const imageBase64 = await getImageContent(message.id, LINE_CHANNEL_ACCESS_TOKEN);
+            const imageBase64 = await getImageContent(messageId, LINE_CHANNEL_ACCESS_TOKEN);
 
             // Perform OCR
             rawMessage = await performOCR(imageBase64, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -537,10 +596,16 @@ serve(async (req) => {
             console.error('Failed to get LINE profile:', e);
           }
 
+          // Save session to database with messageId as key
+          await saveSession(supabase, messageId, {
+            reports,
+            lineUserId: userId,
+            lineDisplayName
+          });
+
           // Create Flex Messages for each report (max 5 bubbles)
-          // Embed report data directly in postback - no session needed!
           const flexMessages = reports.slice(0, 5).map((report, index) =>
-            createReviewFlexMessage(report, index, userId, lineDisplayName)
+            createReviewFlexMessage(report, index, messageId)
           );
 
           await replyMessage(replyToken, flexMessages, LINE_CHANNEL_ACCESS_TOKEN);
@@ -556,12 +621,24 @@ serve(async (req) => {
       // Handle postback events (button clicks)
       else if (event.type === 'postback') {
         const postbackData = new URLSearchParams(event.postback.data);
-        const action = postbackData.get('action');
+        const action = postbackData.get('a'); // 's' = submit, 'c' = cancel
+        const sessionMessageId = postbackData.get('m'); // messageId as session key
+        const reportIndex = parseInt(postbackData.get('i') || '0');
 
-        if (action === 'submit') {
-          const encodedData = postbackData.get('data');
+        if (action === 's' && sessionMessageId) {
+          // Get session from database
+          const session = await getSession(supabase, sessionMessageId);
 
-          if (!encodedData) {
+          if (!session) {
+            await replyMessage(replyToken, [{
+              type: 'text',
+              text: 'เซสชันหมดอายุ กรุณาส่งข้อมูลใหม่อีกครั้ง'
+            }], LINE_CHANNEL_ACCESS_TOKEN);
+            continue;
+          }
+
+          const report = session.reports[reportIndex];
+          if (!report) {
             await replyMessage(replyToken, [{
               type: 'text',
               text: 'ไม่พบข้อมูลรายงาน กรุณาส่งข้อมูลใหม่อีกครั้ง'
@@ -570,9 +647,6 @@ serve(async (req) => {
           }
 
           try {
-            // Decode report data from postback
-            const report = JSON.parse(decodeURIComponent(atob(encodedData)));
-
             // Generate embedding
             const embedding = await generateEmbedding(report.raw_message, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -597,7 +671,7 @@ serve(async (req) => {
                 .insert({
                   name: report.name || '',
                   lastname: report.lastname || '',
-                  reporter_name: report.reporter_name || report.line_display_name || '',
+                  reporter_name: report.reporter_name || session.lineDisplayName || '',
                   address: report.address || '',
                   phone: report.phone || [],
                   location_lat: report.location_lat ? parseFloat(report.location_lat) : null,
@@ -617,8 +691,8 @@ serve(async (req) => {
                   status: 'pending',
                   raw_message: report.raw_message || '',
                   embedding,
-                  line_user_id: report.line_user_id,
-                  line_display_name: report.line_display_name,
+                  line_user_id: session.lineUserId,
+                  line_display_name: session.lineDisplayName,
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
                 });
@@ -630,6 +704,19 @@ serve(async (req) => {
               await replyMessage(replyToken, [createThankYouMessage()], LINE_CHANNEL_ACCESS_TOKEN);
             }
 
+            // Mark this report as submitted in session
+            session.reports[reportIndex] = null;
+            const remainingReports = session.reports.filter((r: any) => r !== null);
+
+            if (remainingReports.length === 0) {
+              // All reports submitted, delete session
+              await deleteSession(supabase, sessionMessageId);
+            } else {
+              // Update session with remaining reports
+              session.reports = remainingReports;
+              await saveSession(supabase, sessionMessageId, session);
+            }
+
           } catch (error) {
             console.error('Submit error:', error);
             await replyMessage(replyToken, [{
@@ -638,7 +725,22 @@ serve(async (req) => {
             }], LINE_CHANNEL_ACCESS_TOKEN);
           }
         }
-        else if (action === 'cancel') {
+        else if (action === 'c' && sessionMessageId) {
+          // Cancel - mark report as cancelled in session
+          const session = await getSession(supabase, sessionMessageId);
+
+          if (session) {
+            session.reports[reportIndex] = null;
+            const remainingReports = session.reports.filter((r: any) => r !== null);
+
+            if (remainingReports.length === 0) {
+              await deleteSession(supabase, sessionMessageId);
+            } else {
+              session.reports = remainingReports;
+              await saveSession(supabase, sessionMessageId, session);
+            }
+          }
+
           await replyMessage(replyToken, [{
             type: 'text',
             text: 'ยกเลิกรายงานนี้แล้วครับ'

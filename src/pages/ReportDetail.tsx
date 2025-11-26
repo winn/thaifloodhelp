@@ -226,14 +226,16 @@ const ReportDetail = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {report.location_lat && report.location_long ? (
+              {report.location_lat && report.location_long || report.map_link ? (
                 <>
-                  <div>
-                    <p className="text-sm text-muted-foreground">พิกัด</p>
-                    <p className="font-mono text-sm">
-                      {report.location_lat}, {report.location_long}
-                    </p>
-                  </div>
+                  {report.location_lat && report.location_long && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">พิกัด</p>
+                      <p className="font-mono text-sm">
+                        {report.location_lat}, {report.location_long}
+                      </p>
+                    </div>
+                  )}
 
                   {report.map_link && (
                     <Button

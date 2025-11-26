@@ -56,12 +56,16 @@ export function LiffProvider({ children }: { children: ReactNode }) {
           }
         } else {
           setIsInLiffClient(false);
-          // Always init for external browsers (mobile or desktop) without auto-login
-          await liff.init({ liffId: LIFF_ID });
-          setIsLiffInitialized(true);
-          if (liff.isLoggedIn()) {
-            setIsLoggedIn(true);
-            await fetchProfile();
+          if (mobileCheck()) {
+            window.location.replace(`line://app/${LIFF_ID}`);
+            setTimeout(() => { window.close(); }, 5000);
+          } else {
+            await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: false });
+            setIsLiffInitialized(true);
+            if (liff.isLoggedIn()) {
+              setIsLoggedIn(true);
+              await fetchProfile();
+            }
           }
         }
       } catch (err) {

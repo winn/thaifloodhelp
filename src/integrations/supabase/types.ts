@@ -79,6 +79,30 @@ export type Database = {
           },
         ]
       }
+      line_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string
+          session_data: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id: string
+          session_data: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string
+          session_data?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

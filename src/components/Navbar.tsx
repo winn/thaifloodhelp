@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLiff } from "@/contexts/LiffContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Sheet,
@@ -26,10 +27,16 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAdmin, signOut } = useAuth();
+  const { isLoggedIn, profile, logout: liffLogout } = useLiff();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
+    navigate("/");
+  };
+
+  const handleLiffLogout = () => {
+    liffLogout();
     navigate("/");
   };
 
@@ -88,18 +95,18 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 will-change-auto">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo/Brand */}
           <div
-            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0 overflow-hidden"
             onClick={() => navigate("/")}
           >
-            <img src={logo} alt="Thai Flood Help Logo" className="h-8 w-8 sm:h-10 sm:w-10" />
-            <div>
-              <h1 className="text-base sm:text-lg font-bold">ช่วยเหลือผู้ประสบภัย</h1>
-              <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Flood Help System</p>
+            <img src={logo} alt="Thai Flood Help Logo" className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 flex-shrink-0" />
+            <div className="min-w-0 overflow-hidden">
+              <h1 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold truncate whitespace-nowrap">ช่วยเหลือผู้ประสบภัย</h1>
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground hidden md:block truncate whitespace-nowrap">Flood Help System</p>
             </div>
           </div>
 
@@ -138,7 +145,7 @@ const Navbar = () => {
                 </Button>
               );
             })}
-            
+
             {/* Auth Button */}
             {user ? (
               <DropdownMenu>
@@ -164,6 +171,30 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            ) : isLoggedIn && profile ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="h-8 w-8 border-2 border-[#06C755]">
+                      <AvatarImage src={profile.pictureUrl} alt={profile.displayName} />
+                      <AvatarFallback>
+                        {profile.displayName?.charAt(0).toUpperCase() || "L"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    {profile.displayName}
+                    <span className="text-[10px] bg-[#06C755] text-white px-1.5 py-0.5 rounded-full">LINE</span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLiffLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    ออกจากระบบ
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button
                 variant="outline"
@@ -177,21 +208,21 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu */}
-          <div className="md:hidden">
+          <div className="md:hidden flex-shrink-0">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px]">
+              <SheetContent side="right" className="w-[280px] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
                     <img src={logo} alt="Logo" className="h-6 w-6" />
                     เมนู
                   </SheetTitle>
                 </SheetHeader>
-                <div className="flex flex-col gap-2 mt-8">
+                <div className="flex flex-col gap-2 mt-8 pb-8">
                   {navItems.map((item) => {
                     const Icon = item.icon;
                     const isExternal = 'isExternal' in item && item.isExternal;
@@ -227,7 +258,7 @@ const Navbar = () => {
                       </Button>
                     );
                   })}
-                  
+
                   {/* Auth Button Mobile */}
                   <div className="mt-4 pt-4 border-t">
                     {user ? (
@@ -248,6 +279,33 @@ const Navbar = () => {
                           variant="ghost"
                           className="w-full justify-start gap-3 h-14"
                           onClick={handleSignOut}
+                        >
+                          <LogOut className="h-5 w-5" />
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">ออกจากระบบ</span>
+                          </div>
+                        </Button>
+                      </>
+                    ) : isLoggedIn && profile ? (
+                      <>
+                        <div className="px-4 py-2 flex items-center gap-3">
+                          <Avatar className="h-10 w-10 border-2 border-[#06C755]">
+                            <AvatarImage src={profile.pictureUrl} alt={profile.displayName} />
+                            <AvatarFallback>
+                              {profile.displayName?.charAt(0).toUpperCase() || "L"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="text-sm">
+                            <div className="font-medium flex items-center gap-2">
+                              {profile.displayName}
+                              <span className="text-[10px] bg-[#06C755] text-white px-1.5 py-0.5 rounded-full">LINE</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start gap-3 h-14"
+                          onClick={handleLiffLogout}
                         >
                           <LogOut className="h-5 w-5" />
                           <div className="flex flex-col items-start">
