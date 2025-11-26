@@ -483,37 +483,13 @@ const Review = () => {
                   )}
                 </Button>
               </div>
-              {!formData.raw_message?.match(/(maps\.google\.com|goo\.gl|google\.com\/maps|maps\.app\.goo\.gl)/i) ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="relative">
-                        <Textarea
-                          id="address"
-                          value={formData.address || '-'}
-                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          rows={3}
-                          placeholder="-"
-                          className="border-destructive/50 hover:border-destructive focus:border-destructive"
-                        />
-                        <AlertTriangle className="absolute right-2 top-2 h-4 w-4 text-destructive" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="bg-destructive text-destructive-foreground">
-                      <p className="font-medium">⚠️ Geocoding อาจมีความคลาดเคลื่อน</p>
-                      <p className="text-xs">กรุณาตรวจสอบพิกัดให้แน่ใจค่ะ</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <Textarea
-                  id="address"
-                  value={formData.address || '-'}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  rows={3}
-                  placeholder="-"
-                />
-              )}
+              <Textarea
+                id="address"
+                value={formData.address || '-'}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                rows={3}
+                placeholder="-"
+              />
             </div>
 
             <div className="space-y-2">
@@ -529,33 +505,102 @@ const Review = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="location_lat">ละติจูด</Label>
-                <Input
-                  id="location_lat"
-                  value={formData.location_lat || '-'}
-                  onChange={(e) => setFormData({ ...formData, location_lat: e.target.value })}
-                  placeholder="-"
-                />
+                {!formData.raw_message?.match(/(maps\.google\.com|goo\.gl|google\.com\/maps|maps\.app\.goo\.gl)/i) ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="relative">
+                          <Input
+                            id="location_lat"
+                            value={formData.location_lat || '-'}
+                            onChange={(e) => setFormData({ ...formData, location_lat: e.target.value })}
+                            placeholder="-"
+                            className="border-destructive/50 hover:border-destructive focus:border-destructive pr-8"
+                          />
+                          <AlertTriangle className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="bg-destructive text-destructive-foreground">
+                        <p className="font-medium">⚠️ Geocoding อาจมีความคลาดเคลื่อน</p>
+                        <p className="text-xs">กรุณาตรวจสอบพิกัดให้แน่ใจค่ะ</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Input
+                    id="location_lat"
+                    value={formData.location_lat || '-'}
+                    onChange={(e) => setFormData({ ...formData, location_lat: e.target.value })}
+                    placeholder="-"
+                  />
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="location_long">ลองติจูด</Label>
-                <Input
-                  id="location_long"
-                  value={formData.location_long || '-'}
-                  onChange={(e) => setFormData({ ...formData, location_long: e.target.value })}
-                  placeholder="-"
-                />
+                {!formData.raw_message?.match(/(maps\.google\.com|goo\.gl|google\.com\/maps|maps\.app\.goo\.gl)/i) ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="relative">
+                          <Input
+                            id="location_long"
+                            value={formData.location_long || '-'}
+                            onChange={(e) => setFormData({ ...formData, location_long: e.target.value })}
+                            placeholder="-"
+                            className="border-destructive/50 hover:border-destructive focus:border-destructive pr-8"
+                          />
+                          <AlertTriangle className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="bg-destructive text-destructive-foreground">
+                        <p className="font-medium">⚠️ Geocoding อาจมีความคลาดเคลื่อน</p>
+                        <p className="text-xs">กรุณาตรวจสอบพิกัดให้แน่ใจค่ะ</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Input
+                    id="location_long"
+                    value={formData.location_long || '-'}
+                    onChange={(e) => setFormData({ ...formData, location_long: e.target.value })}
+                    placeholder="-"
+                  />
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="map_link">ลิงก์ Google Maps</Label>
-              <Input
-                id="map_link"
-                value={formData.map_link || '-'}
-                onChange={(e) => setFormData({ ...formData, map_link: e.target.value })}
-                placeholder="https://maps.google.com/... หรือ https://goo.gl/maps/..."
-              />
+              {!formData.raw_message?.match(/(maps\.google\.com|goo\.gl|google\.com\/maps|maps\.app\.goo\.gl)/i) ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="relative">
+                        <Input
+                          id="map_link"
+                          value={formData.map_link || '-'}
+                          onChange={(e) => setFormData({ ...formData, map_link: e.target.value })}
+                          placeholder="https://maps.google.com/... หรือ https://goo.gl/maps/..."
+                          className="border-destructive/50 hover:border-destructive focus:border-destructive pr-8"
+                        />
+                        <AlertTriangle className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="bg-destructive text-destructive-foreground">
+                      <p className="font-medium">⚠️ Geocoding อาจมีความคลาดเคลื่อน</p>
+                      <p className="text-xs">กรุณาตรวจสอบพิกัดให้แน่ใจค่ะ</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <Input
+                  id="map_link"
+                  value={formData.map_link || '-'}
+                  onChange={(e) => setFormData({ ...formData, map_link: e.target.value })}
+                  placeholder="https://maps.google.com/... หรือ https://goo.gl/maps/..."
+                />
+              )}
             </div>
 
             <div className="space-y-4">
