@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Save, AlertCircle, Loader2, FileText, Sparkles, LogIn, Bell } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, Loader2, FileText, Sparkles, LogIn, Bell, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
@@ -482,13 +483,37 @@ const Review = () => {
                   )}
                 </Button>
               </div>
-              <Textarea
-                id="address"
-                value={formData.address || '-'}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                rows={3}
-                placeholder="-"
-              />
+              {!formData.raw_message?.match(/(maps\.google\.com|goo\.gl|google\.com\/maps|maps\.app\.goo\.gl)/i) ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="relative">
+                        <Textarea
+                          id="address"
+                          value={formData.address || '-'}
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                          rows={3}
+                          placeholder="-"
+                          className="border-destructive/50 hover:border-destructive focus:border-destructive"
+                        />
+                        <AlertTriangle className="absolute right-2 top-2 h-4 w-4 text-destructive" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="bg-destructive text-destructive-foreground">
+                      <p className="font-medium">⚠️ Geocoding อาจมีความคลาดเคลื่อน</p>
+                      <p className="text-xs">กรุณาตรวจสอบพิกัดให้แน่ใจค่ะ</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <Textarea
+                  id="address"
+                  value={formData.address || '-'}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  rows={3}
+                  placeholder="-"
+                />
+              )}
             </div>
 
             <div className="space-y-2">
