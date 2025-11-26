@@ -111,13 +111,11 @@ All colors MUST be HSL.
   }
 
   html {
-    overflow-y: scroll;
     width: 100%;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    overflow-y: auto !important;
     padding-right: 0 !important;
   }
 

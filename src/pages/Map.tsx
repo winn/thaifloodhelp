@@ -1,16 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Report } from '@/types/report';
 import InteractiveMap from '@/components/InteractiveMap';
-import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Loader2, MapPin, Search, X } from 'lucide-react';
+import MapControlPanel from '@/components/MapControlPanel';
+import BasemapControl from '@/components/BasemapControl';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import L from 'leaflet';
+import { getMapConfig } from '@/types/map';
 import '../styles/map.css';
 
 const Map = () => {
@@ -19,10 +16,16 @@ const Map = () => {
         1, 2, 3, 4, 5,
     ]);
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([
-        'pending', 'processed', 'completed',
+        'pending',
+        'processed',
+        'completed',
     ]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedBasemap, setSelectedBasemap] = useState('osm');
     const { toast } = useToast();
+
+    // Get map configuration from env
+    const mapConfig = getMapConfig();
 
     // Fetch all reports
     const { data: reports, isLoading, error } = useQuery({
@@ -82,9 +85,10 @@ const Map = () => {
             return;
         }
 
-        let filtered = reports.filter((report) =>
-            selectedUrgencyLevels.includes(report.urgency_level) &&
-            selectedStatuses.includes(report.status)
+        let filtered = reports.filter(
+            (report) =>
+                selectedUrgencyLevels.includes(report.urgency_level) &&
+                selectedStatuses.includes(report.status)
         );
 
         if (searchQuery.trim()) {
@@ -117,18 +121,17 @@ const Map = () => {
         );
     };
 
-    const clearSearch = () => {
+    const resetFilters = () => {
+        setSelectedUrgencyLevels([1, 2, 3, 4, 5]);
+        setSelectedStatuses(['pending', 'processed', 'completed']);
         setSearchQuery('');
     };
 
-    const reportsWithLocation = filteredReports.filter(
-        (r) => r.location_lat !== null && r.location_long !== null
-    );
-
-    // Count all reports (not filtered) to show total counts regardless of checkbox selection
-    const allReportsWithLocation = reports?.filter(
-        (r) => r.location_lat !== null && r.location_long !== null
-    ) || [];
+    // Count all reports (not filtered)
+    const allReportsWithLocation =
+        reports?.filter(
+            (r) => r.location_lat !== null && r.location_long !== null
+        ) || [];
 
     const urgencyCounts = {
         1: allReportsWithLocation.filter((r) => r.urgency_level === 1).length,
@@ -139,10 +142,17 @@ const Map = () => {
     };
 
     const statusCounts = {
-        pending: allReportsWithLocation.filter((r) => r.status === 'pending').length,
-        processed: allReportsWithLocation.filter((r) => r.status === 'processed').length,
-        completed: allReportsWithLocation.filter((r) => r.status === 'completed').length,
+        pending: allReportsWithLocation.filter((r) => r.status === 'pending')
+            .length,
+        processed: allReportsWithLocation.filter((r) => r.status === 'processed')
+            .length,
+        completed: allReportsWithLocation.filter((r) => r.status === 'completed')
+            .length,
     };
+
+    const visibleCount = filteredReports.filter(
+        (r) => r.location_lat !== null && r.location_long !== null
+    ).length;
 
     if (isLoading) {
         return (
@@ -155,182 +165,45 @@ const Map = () => {
         );
     }
 
+    // Calculate map center based on config
+    const mapCenter: [number, number] = mapConfig.useDefaultLocation
+        ? [mapConfig.defaultLat, mapConfig.defaultLng]
+        : [13.7563, 100.5018]; // Thailand center as fallback
+
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white">
-            {/* Header */}
-            <div className="bg-white shadow-sm border-b px-4 py-4">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex items-center gap-3 mb-2">
-                        <MapPin className="h-8 w-8 text-blue-600" />
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                            แผนที่ผู้ประสบภัย
-                        </h1>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                        แสดงตำแหน่งผู้ประสบน้ำท่วม {allReportsWithLocation.length} จุด
-                    </p>
-                </div>
+        <div className="map-page-container relative w-full h-full overflow-hidden">
+            {/* Full screen map */}
+            <div className="absolute inset-0">
+                <InteractiveMap
+                    reports={filteredReports}
+                    center={mapCenter}
+                    zoom={mapConfig.useDefaultLocation ? mapConfig.defaultZoom : 6}
+                    showLegend={true}
+                    selectedBasemap={selectedBasemap}
+                />
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden">
-                {/* Sidebar Controls */}
-                <Card className="lg:w-80 p-4 space-y-4 overflow-y-auto">
-                    {/* Search */}
-                    <div>
-                        <Label className="text-sm font-semibold mb-2 block">ค้นหา</Label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                type="text"
-                                placeholder="ชื่อ, ที่อยู่, ความช่วยเหลือ..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 pr-8"
-                            />
-                            {searchQuery && (
-                                <button
-                                    onClick={clearSearch}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
+            {/* Control Panel (Bottom Left) */}
+            <MapControlPanel
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedUrgencyLevels={selectedUrgencyLevels}
+                onUrgencyToggle={toggleUrgencyLevel}
+                selectedStatuses={selectedStatuses}
+                onStatusToggle={toggleStatus}
+                urgencyCounts={urgencyCounts}
+                statusCounts={statusCounts}
+                totalCount={totalCount || 0}
+                visibleCount={visibleCount}
+                allReportsWithLocationCount={allReportsWithLocation.length}
+                onReset={resetFilters}
+            />
 
-                    {/* Status Filter */}
-                    <div>
-                        <Label className="text-sm font-semibold mb-3 block">
-                            สถานะ
-                        </Label>
-                        <div className="space-y-2">
-                            {[
-                                { value: 'pending', label: 'รอดำเนินการ', color: '#EF4444' },
-                                { value: 'processed', label: 'กำลังดำเนินการ', color: '#F59E0B' },
-                                { value: 'completed', label: 'เสร็จสิ้น', color: '#10B981' },
-                            ].map((status) => (
-                                <div key={status.value} className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id={`status-${status.value}`}
-                                            checked={selectedStatuses.includes(status.value)}
-                                            onCheckedChange={() => toggleStatus(status.value)}
-                                        />
-                                        <Label
-                                            htmlFor={`status-${status.value}`}
-                                            className="cursor-pointer flex items-center gap-2"
-                                        >
-                                            <span
-                                                className={`w-3 h-3 rounded-full`}
-                                                style={{ backgroundColor: status.color }}
-                                            />
-                                            <span className="text-sm">{status.label}</span>
-                                        </Label>
-                                    </div>
-                                    <span className="text-xs text-gray-500">
-                                        ({statusCounts[status.value as keyof typeof statusCounts]})
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Urgency Level Filter */}
-                    <div>
-                        <Label className="text-sm font-semibold mb-3 block">
-                            ระดับความเร่งด่วน
-                        </Label>
-                        <div className="space-y-2">
-                            {[5, 4, 3, 2, 1].map((level) => (
-                                <div key={level} className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id={`urgency-${level}`}
-                                            checked={selectedUrgencyLevels.includes(level)}
-                                            onCheckedChange={() => toggleUrgencyLevel(level)}
-                                        />
-                                        <Label
-                                            htmlFor={`urgency-${level}`}
-                                            className="cursor-pointer flex items-center gap-2"
-                                        >
-                                            <span
-                                                className={`w-3 h-3 rounded-full`}
-                                                style={{
-                                                    backgroundColor:
-                                                        level === 5
-                                                            ? '#DC2626'
-                                                            : level === 4
-                                                                ? '#EA580C'
-                                                                : level === 3
-                                                                    ? '#CA8A04'
-                                                                    : level === 2
-                                                                        ? '#2563EB'
-                                                                        : '#16A34A',
-                                                }}
-                                            />
-                                            <span className="text-sm">Level {level}</span>
-                                        </Label>
-                                    </div>
-                                    <span className="text-xs text-gray-500">
-                                        ({urgencyCounts[level as keyof typeof urgencyCounts]})
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Statistics */}
-                    <div className="pt-4 border-t">
-                        <Label className="text-sm font-semibold mb-2 block">สถิติ</Label>
-                        <div className="space-y-1 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">ทั้งหมด:</span>
-                                <span className="font-semibold">{totalCount || 0}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">มีตำแหน่ง:</span>
-                                <span className="font-semibold">
-                                    {allReportsWithLocation.length}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">แสดงบนแผนที่:</span>
-                                <span className="font-semibold text-blue-600">
-                                    {filteredReports.filter(
-                                        (r) => r.location_lat !== null && r.location_long !== null
-                                    ).length}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Reset Button */}
-                    <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => {
-                            setSelectedUrgencyLevels([1, 2, 3, 4, 5]);
-                            setSelectedStatuses(['pending', 'processed', 'completed']);
-                            setSearchQuery('');
-                        }}
-                    >
-                        รีเซ็ตตัวกรอง
-                    </Button>
-                </Card>
-
-                {/* Map Container */}
-                <Card className="flex-1 p-0 overflow-hidden relative">
-                    <div className="w-full h-[60vh] lg:h-full">
-                        <InteractiveMap
-                            reports={filteredReports}
-                            center={[13.7563, 100.5018]}
-                            zoom={6}
-                            showLegend={true}
-                        />
-                    </div>
-                </Card>
-            </div>
+            {/* Basemap Control (Top Right) */}
+            <BasemapControl
+                selectedBasemap={selectedBasemap}
+                onBasemapChange={setSelectedBasemap}
+            />
         </div>
     );
 };

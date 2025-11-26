@@ -5,6 +5,7 @@ import '../styles/map.css';
 import { Report } from '@/types/report';
 import { useNavigate } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
+import { BASEMAP_OPTIONS } from '@/types/map';
 
 // Fix for default marker icon issue with Webpack
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -29,6 +30,7 @@ interface InteractiveMapProps {
     center?: [number, number];
     zoom?: number;
     showLegend?: boolean;
+    selectedBasemap?: string;
 }
 
 const URGENCY_COLORS = {
@@ -44,10 +46,12 @@ const InteractiveMap = ({
     center = [13.7563, 100.5018], // Default to center of Thailand
     zoom = 6,
     showLegend = true,
+    selectedBasemap = 'osm',
 }: InteractiveMapProps) => {
     const mapRef = useRef<L.Map | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const markersRef = useRef<any>(null);
+    const basemapLayerRef = useRef<L.TileLayer | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -71,12 +75,17 @@ const InteractiveMap = ({
 
         mapRef.current = map;
 
-        // Add OpenStreetMap tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution:
-                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19,
+        // Add initial basemap tile layer
+        const basemapOption = BASEMAP_OPTIONS.find(b => b.id === selectedBasemap) || BASEMAP_OPTIONS[0];
+        const basemapLayer = L.tileLayer(basemapOption.url, {
+            attribution: basemapOption.attribution,
+            maxZoom: basemapOption.maxZoom || 19,
         }).addTo(map);
+
+        // Ensure basemap stays behind markers
+        basemapLayer.bringToBack();
+
+        basemapLayerRef.current = basemapLayer;
 
         // Add legend if enabled
         if (showLegend) {
@@ -110,6 +119,33 @@ const InteractiveMap = ({
             }
         };
     }, [center, zoom, showLegend]);
+
+    // Handle basemap changes
+    useEffect(() => {
+        if (!mapRef.current || !basemapLayerRef.current) return;
+
+        const basemapOption = BASEMAP_OPTIONS.find(b => b.id === selectedBasemap);
+        if (!basemapOption) return;
+
+        // Remove old basemap
+        mapRef.current.removeLayer(basemapLayerRef.current);
+
+        // Add new basemap
+        const newBasemapLayer = L.tileLayer(basemapOption.url, {
+            attribution: basemapOption.attribution,
+            maxZoom: basemapOption.maxZoom || 19,
+        }).addTo(mapRef.current);
+
+        // Ensure basemap stays behind markers
+        newBasemapLayer.bringToBack();
+
+        // Bring markers to front if they exist
+        if (markersRef.current && mapRef.current.hasLayer(markersRef.current)) {
+            markersRef.current.bringToFront();
+        }
+
+        basemapLayerRef.current = newBasemapLayer;
+    }, [selectedBasemap]);
 
     // Update markers when reports change
     useEffect(() => {
@@ -146,7 +182,7 @@ const InteractiveMap = ({
         const validReports = reports.filter((report) => {
             // Skip if no location data
             if (!report.location_lat || !report.location_long) return false;
-            
+
             const lat = parseFloat(report.location_lat.toString());
             const lng = parseFloat(report.location_long.toString());
 
@@ -254,30 +290,12 @@ const InteractiveMap = ({
         markersRef.current = markers;
         mapRef.current.addLayer(markers);
 
-        // Fit bounds to show all markers if there are any, but stay within Thailand
-        if (validReports.length > 0 && mapRef.current) {
-            const bounds = markers.getBounds();
-            if (bounds.isValid()) {
-                // Ensure bounds are within Thailand
-                const thailandBounds = L.latLngBounds([5.6, 97.3], [20.5, 105.6]);
-                const constrainedBounds = bounds.pad(0.1);
-                
-                // Only fit if bounds are reasonable
-                if (thailandBounds.contains(constrainedBounds.getCenter())) {
-                    mapRef.current.fitBounds(constrainedBounds, { 
-                        padding: [50, 50], 
-                        maxZoom: 15,
-                        animate: false 
-                    });
-                } else {
-                    // Default to Thailand center if bounds are outside
-                    mapRef.current.setView([13.7563, 100.5018], 6);
-                }
-            }
-        } else if (mapRef.current) {
-            // No valid reports, show Thailand center
-            mapRef.current.setView([13.7563, 100.5018], 6);
-        }
+        // Ensure markers stay on top of basemap
+        markers.bringToFront();
+
+        // DON'T auto-fit bounds - let user control the view
+        // Only set initial view if this is the first load (no previous markers)
+        // This prevents the map from resetting when changing basemap or toggling layers
     }, [reports, navigate]);
 
     const hasValidReports = reports.some(

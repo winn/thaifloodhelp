@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { LiffProvider } from "./contexts/LiffContext";
 import Landing from "./pages/Landing";
 import Input from "./pages/Input";
@@ -21,35 +21,44 @@ import Navbar from "./components/Navbar";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  const location = useLocation();
+  const isMapPage = location.pathname === '/map';
+
+  return (
+    <div className={isMapPage ? "h-screen overflow-hidden flex flex-col" : "flex flex-col min-h-screen"}>
+      <Navbar />
+      <div className={isMapPage ? "flex-1 overflow-hidden" : "flex-1"}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/extraction" element={<Input />} />
+          <Route path="/select" element={<SelectReports />} />
+          <Route path="/review" element={<Review />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/stats" element={<Stats />} />
+          <Route path="/report/:id" element={<ReportDetail />} />
+          <Route path="/map" element={<Map />} />
+          <Route path="/api" element={<Api />} />
+          <Route path="/help" element={<Help />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+      {!isMapPage && <Footer />}
+    </div>
+  );
+};
+
 const App = () => (
   <LiffProvider>
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <div className="flex-1">
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/extraction" element={<Input />} />
-              <Route path="/select" element={<SelectReports />} />
-              <Route path="/review" element={<Review />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/report/:id" element={<ReportDetail />} />
-              <Route path="/map" element={<Map />} />
-              <Route path="/api" element={<Api />} />
-              <Route path="/help" element={<Help />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-          <Footer />
-        </div>
-      </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </LiffProvider>

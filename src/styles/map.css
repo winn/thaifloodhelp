@@ -267,9 +267,50 @@
   }
 
   .map-container {
-    height: 60vh;
-    min-height: 640px;
+    height: 100%;
+    min-height: unset;
   }
+}
+
+/* Disable scroll on map page body */
+body:has(.map-page-container) {
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* Ensure map controls are visible on mobile */
+@media (max-width: 640px) {
+  /* Adjust map controls for mobile */
+  .map-controls-container {
+    max-width: calc(100vw - 2rem);
+  }
+
+  /* Make basemap selector more compact on mobile */
+  .basemap-selector-card {
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+/* Touch-friendly adjustments */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets for mobile */
+  .leaflet-control-zoom-in,
+  .leaflet-control-zoom-out {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 20px !important;
+  }
+
+  .urgency-marker {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Prevent map from being dragged/scrolled accidentally */
+.leaflet-container {
+  touch-action: pan-x pan-y;
 }
 
 /* Loading and error states */
