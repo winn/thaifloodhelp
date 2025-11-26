@@ -1,66 +1,194 @@
 # 🌊 Flood Victim Management System
 
-A full-stack web platform for collecting and managing flood disaster victim information from social media posts. Designed for Thai disaster relief workers with a simple, accessible interface. Explanation of the project and Lovable tutorial https://www.youtube.com/watch?v=121fjf-JWvc
+A full-stack tool for Thai relief teams to turn social posts into structured rescue cases—fast, mobile-friendly, and ready for field use. Walkthrough on YouTube: https://www.youtube.com/watch?v=121fjf-JWvc
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+  <a href="https://react.dev/"><img alt="React 18.3.1" src="https://img.shields.io/badge/React-18.3.1-blue.svg?logo=react&logoColor=white"></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript 5.8.3" src="https://img.shields.io/badge/TypeScript-5.8.3-blue.svg?logo=typescript&logoColor=white"></a>
+  <a href="https://vitejs.dev/"><img alt="Vite 5.4.19" src="https://img.shields.io/badge/Vite-5.4.19-646CFF.svg?logo=vite&logoColor=white"></a>
+  <a href="https://tailwindcss.com/"><img alt="Tailwind 3.4.17" src="https://img.shields.io/badge/Tailwind-3.4.17-38B2AC.svg?logo=tailwindcss&logoColor=white"></a>
+  <a href="https://supabase.com/"><img alt="Supabase JS 2.84.0" src="https://img.shields.io/badge/Supabase%20JS-2.84.0-3ECF8E.svg?logo=supabase&logoColor=white"></a>
+  <a href="https://ai.google.dev/"><img alt="Gemini 2.0 Flash" src="https://img.shields.io/badge/Gemini-2.0%20Flash-4285F4.svg?logo=google&logoColor=white"></a>
+  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
+</div>
+
+![App screenshot](public/thaifloodhelp.png)
 
 ## 📋 Overview
 
-This system streamlines the process of collecting and organizing flood victim information shared across social media platforms. Relief workers can paste raw text from social media posts, and the AI extracts structured data, detects duplicates, and organizes information for efficient rescue coordination.
+Paste a social post, review what AI extracts, and push verified cases into a Supabase-backed dashboard with duplicate prevention and natural-language search.
 
 ### Key Features
 
-- 🤖 **AI-Powered Data Extraction**: Automatically extracts victim details from unstructured Thai text using Google Gemini
-- 🔍 **Smart Duplicate Detection**: Vector-based semantic similarity detection prevents duplicate entries
-- 📊 **Comprehensive Dashboard**: View, search, and filter victim records with urgency-based prioritization
-- 💬 **Natural Language Queries**: Ask questions in Thai to find specific victims or analyze data
-- 📱 **Mobile-First Design**: Responsive interface optimized for field work
-- 🗺️ **Location Tracking**: GPS coordinate support for mapping victim locations
-- 🏷️ **Help Categorization**: Track specific needs (water, food, medical, evacuation, etc.)
-- ⚡ **Urgency Classification**: 5-tier urgency system based on demographics and conditions
+- 🤖 AI extraction on Thai text via Gemini 2.0 Flash
+- 🔍 Vector duplicate detection (pgvector)
+- 📊 Dashboard with filters, search, and urgency sorting
+- 💬 Thai natural-language queries to the dataset
+- 🗺️ Location + help-category tagging with urgency classification
+- 📱 Mobile-first UI for field teams
 
 ## 🏗️ Architecture
 
 ### Tech Stack
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Backend**: Supabase (PostgreSQL + Edge Functions)
-- **AI**: Google Gemini 2.0 Flash (data extraction & embeddings)
-- **Vector Search**: PostgreSQL pgvector extension
-- **Hosting**: Lovable Cloud
+**Frontend:**
+- React 18 + TypeScript + Vite
+- Tailwind CSS + shadcn/ui components
+- Mobile-first responsive design
+
+**Backend:**
+- Supabase (PostgreSQL with pgvector extension)
+- Supabase Edge Functions (serverless)
+- Row Level Security (RLS) for data access control
+- Supabase Storage for file management
+
+**AI/ML:**
+- Google Gemini 2.0 Flash for text extraction and embeddings
 
 ### Data Flow
 
+1. **Input**: Social media posts (Thai text) are pasted into the Input page
+2. **AI Extraction**: Gemini 2.0 Flash processes the text and extracts structured victim data
+3. **Select**: Users choose which detected victims to process from the extraction results
+4. **Review**: Extracted data is presented for human validation and editing
+5. **Duplicate Detection**: Vector similarity search (pgvector) checks for existing reports
+6. **Storage**: Validated reports are saved to PostgreSQL database
+7. **Dashboard/Query Bot**: Users can view, filter, search, and query reports via natural language
+
+```mermaid
+flowchart TD
+    Start([Social Media Post]) --> Input[Input Page]
+    Input -->|Thai text| Gemini[Gemini 2.0 Flash<br/>AI Extraction]
+    Gemini -->|Structured data| Select[Select Reports<br/>Choose victims to process]
+    Select --> Review[Review Page<br/>Human Validation]
+    Review -->|Validated reports| DuplicateCheck[Duplicate Detection<br/>pgvector similarity]
+    DuplicateCheck -->|New/Unique| Save[Save to Database<br/>PostgreSQL]
+    DuplicateCheck -->|Duplicate found| Alert[Alert User<br/>Skip duplicate]
+    Alert --> Review
+    Save --> Dashboard[Dashboard<br/>View & Filter]
+    Save --> QueryBot[Query Bot<br/>Natural Language Search]
+    Dashboard --> End1([End User])
+    QueryBot --> End2([End User])
 ```
-Social Media Post → Input Page → AI Extraction → Review Page → 
-Vector Duplicate Check → Database → Dashboard → Query Bot
+
+### System Architecture
+
+```mermaid
+flowchart LR
+    subgraph Client["Web App (Vite + React + TS)"]
+        Input["Input / Landing"]
+        Select["Select Reports"]
+        Review["Review"]
+        Dash["Dashboard + Map + Stats"]
+        Bot["Query Bot"]
+    end
+
+    subgraph Supabase["Supabase Backend"]
+        DB(("PostgreSQL + pgvector"))
+        Edge["Edge Functions"]
+        Auth["Auth / RLS"]
+        Storage(("Storage"))
+    end
+
+    Gemini["Google Gemini 2.0 Flash"]
+
+    Input -->|paste text| Gemini
+    Gemini -->|structured data| Review
+    Select --> Review
+    Review -->|validated reports| Edge
+    Dash -->|CRUD| Edge
+    Bot -->|natural language queries| Edge
+    Edge --> DB
+    Edge --> Storage
+    Edge --> Auth
+    Edge --> Gemini
+```
+
+### Key Edge Functions
+
+The system uses several Supabase Edge Functions for serverless processing:
+
+- **`extract-report`**: Extracts structured data from Thai text using Gemini 2.0 Flash
+- **`generate-embedding`**: Creates vector embeddings for duplicate detection
+- **`check-duplicates`**: Performs similarity search using pgvector to find existing reports
+- **`query-reports`**: Handles natural language queries and converts them to database queries
+- **`search-reports`**: Provides semantic search capabilities over the reports dataset
+
+### Project Structure
+
+```
+.
+├─ public/                 # Static assets served as-is
+├─ src/
+│  ├─ pages/               # Route-level pages (input, select, review, dashboard, map, stats, etc.)
+│  ├─ components/          # Reusable UI building blocks
+│  ├─ hooks/               # Shared React hooks
+│  ├─ contexts/            # React context providers (auth, data)
+│  ├─ constants/           # App-wide constants and configuration
+│  ├─ integrations/        # Supabase/Gemini and external service helpers
+│  ├─ lib/                 # Utilities and helper functions
+│  ├─ styles/              # Tailwind and global style helpers
+│  └─ types/               # TypeScript types and interfaces
+├─ supabase/
+│  ├─ functions/           # Edge Functions (extract-report, check-duplicates, etc.)
+│  └─ migrations/          # Database migrations and schema
+├─ package.json            # Project scripts and dependencies
+└─ vite.config.ts          # Vite configuration
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Supabase account
-- Google Gemini API key ([Get one for free](https://aistudio.google.com/app/apikey))
+**Required:**
+- Node.js 18+ installed
+- Supabase project and credentials
+- Google Gemini API key
 
-### Installation
+**Optional:**
+- LINE LIFF ID (for LINE app integration)
+- GISTDA API key (for flood map overlay)
 
-1. **Clone the repository**
-```bash
-git clone https://github.com/yourusername/flood-victim-management.git
-cd flood-victim-management
-```
+### Getting API Keys & Credentials
 
-2. **Install dependencies**
+**1. Supabase Credentials** (`VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`)
+   - Go to [Supabase Dashboard](https://supabase.com/dashboard) and create a project
+   - Select your project → Settings → API
+   - Copy the **Project URL**, **Project ID**, and **anon/public key**
+
+**2. Google Gemini API Key** (`GEMINI_API_KEY`)
+   - Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - Sign in with your Google account
+   - Click "Create API Key" → Select or create a Google Cloud project
+   - Copy the generated API key
+
+**3. LINE LIFF ID** (`VITE_LIFF_ID`) - *Optional*
+   - Go to [LINE Developers Console](https://developers.line.biz/console/)
+   - Create a new provider and channel (Messaging API)
+   - Go to your channel → LIFF tab → Add LIFF app
+   - Copy the LIFF ID from the created app
+
+**4. GISTDA API Key** (`VITE_GISTDA_API_KEY`) - *Optional*
+   - Visit [GISTDA](https://www.gistda.or.th/)
+   - Contact GISTDA or check their developer portal for API key registration
+   - Note: This enables flood map overlay visualization on the map
+
+### Setup Steps
+
+1) Install deps  
 ```bash
 npm install
 ```
 
-3. **Set up environment variables**
+2) Configure environment variables  
 
-Create a `.env` file in the root directory:
+Copy `.env.example` to `.env` and fill in the values you obtained above:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your credentials:
 
 ```env
 # Supabase Configuration
@@ -70,86 +198,40 @@ VITE_SUPABASE_PROJECT_ID=your_supabase_project_id
 
 # Google Gemini API Key (required for AI extraction)
 GEMINI_API_KEY=your_gemini_api_key
+
+# Optional: LINE LIFF ID (for LINE app integration)
+VITE_LIFF_ID=your_liff_id
+
+# Optional: GISTDA API Key (for flood map overlay)
+VITE_GISTDA_API_KEY=your_gistda_api_key
 ```
 
-4. **Set up Supabase**
-
-Run the migrations in the `supabase/migrations/` directory to create the database schema:
-
+3) Supabase setup  
 ```bash
-# Install Supabase CLI
 npm install -g supabase
-brew install supabase/tap/supabase for mac
-
-# Link to your project
 supabase link --project-ref your-project-ref
-
-# Run migrations
 supabase db push
-```
-
-5. **Configure Supabase Secrets**
-
-Add the `GEMINI_API_KEY` to your Supabase project secrets:
-
-```bash
 supabase secrets set GEMINI_API_KEY=your_gemini_api_key
 ```
 
-6. **Deploy Edge Functions**
-
+4) Deploy edge functions  
 ```bash
-supabase functions deploy extract-report
-supabase functions deploy generate-embedding
-supabase functions deploy check-duplicates
-supabase functions deploy query-reports
-supabase functions deploy search-reports
+supabase functions deploy extract-report generate-embedding check-duplicates query-reports search-reports
 ```
 
-7. **Start the development server**
-
+5) Run local dev  
 ```bash
 npm run dev
 ```
-
-The application will be available at `http://localhost:8080`
+App runs at `http://localhost:8080`.
 
 ## 📖 Usage Guide
 
-### 1. Input Page (/)
-
-Paste raw text from social media posts containing flood victim information. The system supports:
-- Single victim reports
-- Multiple victims in one post
-- Thai language text
-- Unstructured formats
-
-### 2. Report Selection (/select-reports)
-
-If multiple victims are detected, review and select which reports to process.
-
-### 3. Review Page (/review)
-
-- View extracted data side-by-side with original text
-- Edit any fields before saving
-- All fields are optional
-- Urgency level automatically classified (1-5)
-- Help categories automatically detected
-
-### 4. Dashboard (/dashboard)
-
-- View all victim records in sortable table
-- Filter by urgency level, help categories, demographics
-- Search using text or natural language queries
-- Click rows to expand and view full details
-- Export data for offline analysis
-
-### 5. Query Bot
-
-Ask questions in Thai to search the database:
-- "ขอรายชื่อเคสระดับ 5 ทั้งหมดในเชียงใหม่" (List all level 5 cases in Chiang Mai)
-- "มีเด็กต่ำกว่า 1 ขวบกี่เคส" (How many cases have infants under 1 year?)
-- Natural language search powered by vector embeddings
+1) **Input (/)**: Paste Thai social posts (single or multiple victims).  
+2) **Select (/select-reports)**: Choose the detected victims to process.  
+3) **Review (/review)**: Compare raw vs extracted, edit optional fields, urgency auto-set.  
+4) **Dashboard (/dashboard + /map + /stats)**: Sort, filter, search, map, export.  
+5) **Query bot**: Thai natural-language questions (e.g., "ขอรายชื่อเคสระดับ 5 ในเชียงใหม่", "มีเด็กต่ำกว่า 1 ขวบกี่เคส").
 
 ## 🗄️ Database Schema
 
@@ -184,46 +266,51 @@ Ask questions in Thai to search the database:
 
 ### Urgency Level Classification
 
-1. **Level 1**: Warning only, not flooded
-2. **Level 2**: Adults only, stable conditions
-3. **Level 3**: Has children/seniors OR water at second floor
-4. **Level 4**: Very young children (<3 years) OR patients/bedridden OR unable to self-rescue
-5. **Level 5**: Critical - water at roof level, infants in danger, medical emergency, deaths
+1) **Level 1**: Warning only, not flooded  
+2) **Level 2**: Adults only, stable conditions  
+3) **Level 3**: Children/seniors present or water at second floor  
+4) **Level 4**: Infants <3, patients/bedridden, or unable to self-rescue  
+5) **Level 5**: Critical—roof-level water, infants in danger, medical emergency, deaths
 
 ## 🔒 Security & Privacy
 
 - All API keys stored as environment variables
 - Supabase Row Level Security (RLS) policies enforced
 - No authentication required for rapid disaster response
-- Data should be handled according to local privacy regulations
-- Consider data retention policies for post-disaster cleanup
+- Handle data per local privacy regulations; plan retention for post-disaster cleanup
 
 ## 🤝 Contributing
 
-Contributions are welcome! This is an open-source project aimed at improving disaster relief efforts.
-
-### How to Contribute
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1) Fork the repository  
+2) Create a feature branch (`git checkout -b feature/amazing-feature`)  
+3) Commit your changes (`git commit -m 'Add amazing feature'`)  
+4) Push to the branch (`git push origin feature/amazing-feature`)  
+5) Open a Pull Request
 
 ### Areas for Improvement
 
-- [ ] Multi-language support beyond Thai
-- [ ] Map visualization of victim locations
-- [ ] SMS/WhatsApp integration for data collection
-- [ ] Photo upload and OCR extraction
-- [ ] Export functionality (CSV, PDF reports)
-- [ ] Real-time notifications for critical cases
-- [ ] Integration with rescue team dispatch systems
-- [ ] Offline mode for areas with poor connectivity
+- [ ] Multi-language support beyond Thai  
+- [x] Enhanced map features (clustering, heatmaps) - *Route planning pending*  
+- [x] Messaging integration (LINE webhook) - *SMS/WhatsApp pending*  
+- [x] Photo upload and OCR extraction  
+- [x] Export functionality (CSV) - *PDF export pending*  
+- [ ] Real-time notifications for critical cases  
+- [ ] Integration with rescue team dispatch systems  
+- [ ] Offline mode for areas with poor connectivity  
+- [x] Batch processing for multiple reports  
+- [x] Advanced analytics and reporting dashboard
+
+## 👥 Contributors
+
+<a href="https://github.com/winn/thaifloodhelp/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=winn/thaifloodhelp" alt="Contributors" />
+</a>
+
+**View all contributors**: [GitHub Contributors](https://github.com/winn/thaifloodhelp/graphs/contributors)
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License. See `LICENSE` for details.
 
 ## 🙏 Acknowledgments
 
@@ -237,13 +324,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For questions or issues:
 - Open an issue on GitHub
 - Contact the development team
-- Check the [documentation](docs/)
+- Review the codebase documentation in this README
 
 ## ⚠️ Important Notes
 
-This system is designed for rapid deployment during disaster situations. While it includes duplicate detection and data validation, **always verify critical information** before dispatching rescue teams.
+Designed for rapid deployment during disasters. Duplicate detection and validation help, but always verify critical information before dispatching teams.
 
-**Zero Hallucination Policy**: The AI extraction is configured to only extract explicitly stated information and never infer or generate data. However, always review extracted data in the Review page before saving.
+**Zero Hallucination Policy**: AI extraction only returns explicitly stated information—review extracted data in the Review page before saving.
 
 ---
 
