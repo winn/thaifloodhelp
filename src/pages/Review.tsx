@@ -173,6 +173,55 @@ const Review = () => {
         }
       }
 
+      // Try to get coordinates - priority order:
+      // 1. Existing lat/long
+      // 2. Parse map_link if present
+      // 3. Geocode address if present
+      let finalLat = formData.location_lat ? parseFloat(formData.location_lat) : null;
+      let finalLng = formData.location_long ? parseFloat(formData.location_long) : null;
+      let finalMapLink = formData.map_link || null;
+      
+      // Step 1: Try to parse map_link if present and no coordinates yet
+      if (formData.map_link && formData.map_link !== '-' && (!finalLat || !finalLng)) {
+        try {
+          const { data: mapData, error: mapError } = await supabase.functions.invoke(
+            'parse-map-link',
+            { body: { mapLink: formData.map_link } }
+          );
+          
+          if (!mapError && mapData.success) {
+            finalLat = mapData.lat;
+            finalLng = mapData.lng;
+            console.log('Successfully parsed map link:', mapData);
+          }
+        } catch (err) {
+          console.error('Error parsing map link:', err);
+        }
+      }
+
+      // Step 2: If still no coordinates but have address, try geocoding
+      if ((!finalLat || !finalLng) && formData.address && formData.address !== '-') {
+        try {
+          toast.info('กำลังแปลงที่อยู่เป็นพิกัด...', { duration: 2000 });
+          
+          const { data: geocodeData, error: geocodeError } = await supabase.functions.invoke(
+            'geocode-address',
+            { body: { address: formData.address } }
+          );
+          
+          if (!geocodeError && geocodeData.success) {
+            finalLat = geocodeData.lat;
+            finalLng = geocodeData.lng;
+            finalMapLink = geocodeData.map_link;
+            console.log('Successfully geocoded address:', geocodeData);
+            toast.success('แปลงที่อยู่เป็นพิกัดสำเร็จ');
+          }
+        } catch (err) {
+          console.error('Error geocoding address:', err);
+          // Continue with save even if geocoding fails
+        }
+      }
+
       // Generate embedding for the report
       const { data: embeddingData, error: embeddingError } = await supabase.functions.invoke(
         'generate-embedding',
@@ -183,9 +232,9 @@ const Review = () => {
         ...formData,
         name: formData.name && formData.name !== '-' ? formData.name : 'ไม่ระบุชื่อ',
         phone: phones,
-        location_lat: formData.location_lat ? parseFloat(formData.location_lat) : null,
-        location_long: formData.location_long ? parseFloat(formData.location_long) : null,
-        map_link: formData.map_link || null,
+        location_lat: finalLat,
+        location_long: finalLng,
+        map_link: finalMapLink,
         last_contact_at: validLastContact,
         embedding: embeddingError ? null : embeddingData.embedding,
         number_of_patients: formData.number_of_patients || 0,
