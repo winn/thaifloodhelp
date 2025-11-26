@@ -330,6 +330,106 @@ const Api = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="ocr" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Badge>POST</Badge>
+                  <code className="text-sm">/api-v1-ocr</code>
+                </div>
+                <CardDescription>
+                  อ่านข้อความจากรูปภาพด้วย OCR (Optical Character Recognition)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Headers</h3>
+                  <pre className="bg-muted p-4 rounded text-sm">
+{`Content-Type: application/json`}
+                  </pre>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Request Body</h3>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => copyToClipboard(ocrExample, "ocr")}
+                    >
+                      {copiedOcr ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <pre className="bg-muted p-4 rounded text-sm overflow-x-auto">
+{ocrExample}
+                  </pre>
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      รูปภาพต้องเป็น base64 data URL (data:image/jpeg;base64,...) รองรับ JPEG, PNG, WebP
+                    </AlertDescription>
+                  </Alert>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-semibold">ทดสอบ API</h3>
+                  <Textarea
+                    placeholder="วาง JSON request body ที่นี่..."
+                    value={ocrInput}
+                    onChange={(e) => setOcrInput(e.target.value)}
+                    rows={6}
+                    className="font-mono text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => setOcrInput(ocrExample)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      ใช้ตัวอย่าง
+                    </Button>
+                    <Button 
+                      onClick={handleOcr} 
+                      disabled={ocrLoading}
+                      className="flex-1"
+                    >
+                      {ocrLoading ? (
+                        "กำลังประมวลผล..."
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          ส่งคำขอ
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {ocrResponse && (
+                  <div className="space-y-2">
+                    <h3 className="font-semibold">Response</h3>
+                    <pre className="bg-muted p-4 rounded text-sm overflow-x-auto max-h-96">
+{ocrResponse}
+                    </pre>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Example cURL</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-muted p-4 rounded text-sm overflow-x-auto">
+{`curl -X POST '${API_BASE_URL}/api-v1-ocr' \\
+  -H 'Content-Type: application/json' \\
+  -d '${ocrExample.replace(/\n/g, "").replace(/\s+/g, " ")}'`}
+                </pre>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="save" className="space-y-4">
             <Card>
               <CardHeader>
