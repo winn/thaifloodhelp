@@ -3,6 +3,9 @@ project_id = "jyvojztgptxidemjscgg"
 [functions.extract-report]
 verify_jwt = false
 
+[functions.api-v1-ocr]
+verify_jwt = false
+
 [functions.query-reports]
 verify_jwt = false
 

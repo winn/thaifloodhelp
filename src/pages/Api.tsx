@@ -27,9 +27,16 @@ const Api = () => {
 
   const API_BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
-  const ocrExample = JSON.stringify({
+  const ocrExampleBase64 = JSON.stringify({
     image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
   }, null, 2);
+
+  const ocrExampleUrl = JSON.stringify({
+    imageUrl: "https://example.com/image.jpg"
+  }, null, 2);
+
+  const [ocrExampleType, setOcrExampleType] = useState<"base64" | "url">("base64");
+  const ocrExample = ocrExampleType === "base64" ? ocrExampleBase64 : ocrExampleUrl;
 
   const extractExample = JSON.stringify({
     message: "ช่วยด้วยครับ คุณสมชาย ใจดี อยู่บ้านเลขที่ 123 หมู่ 5 ตำบลบ้านใหม่ อำเภอเมือง จังหวัดเชียงใหม่ โทร 081-234-5678 น้ำท่วมบ้านสูง 1 เมตร มีผู้สูงอายุ 2 คน เด็ก 3 คน ต้องการอาหารและน้ำดื่มเร่งด่วน"
@@ -258,19 +265,39 @@ const Api = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">Request Body</h3>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(ocrExample, "ocr")}
-                    >
-                      {copiedOcr ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
+                    <div className="flex gap-2">
+                      <div className="flex gap-1 border rounded p-1">
+                        <Button
+                          size="sm"
+                          variant={ocrExampleType === "base64" ? "default" : "ghost"}
+                          onClick={() => setOcrExampleType("base64")}
+                        >
+                          Base64
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={ocrExampleType === "url" ? "default" : "ghost"}
+                          onClick={() => setOcrExampleType("url")}
+                        >
+                          URL
+                        </Button>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(ocrExample, "ocr")}
+                      >
+                        {copiedOcr ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </div>
                   <pre className="bg-muted p-4 rounded text-sm overflow-x-auto">
 {ocrExample}
                   </pre>
                   <p className="text-sm text-muted-foreground">
-                    หมายเหตุ: ส่งรูปภาพในรูปแบบ Base64 data URL (data:image/[type];base64,[data])
+                    {ocrExampleType === "base64" 
+                      ? "หมายเหตุ: ส่งรูปภาพในรูปแบบ Base64 data URL (data:image/[type];base64,[data])"
+                      : "หมายเหตุ: ส่ง URL ของรูปภาพที่ต้องการอ่าน (imageUrl)"}
                   </p>
                 </div>
 
