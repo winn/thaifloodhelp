@@ -220,7 +220,7 @@ const Input = () => {
             <Droplets className="h-12 w-12 text-primary" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            ระบบรับแจ้งผู้ประสบภัยน้ำท่วม
+            ช่วยใส่ข้อมูลที่เจอใน social media
           </h1>
           <p className="text-muted-foreground text-lg">
             คัดลอกข้อความจากโซเชียลมาวางได้เลย AI จะช่วยจัดการให้
