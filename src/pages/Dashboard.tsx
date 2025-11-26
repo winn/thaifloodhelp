@@ -356,11 +356,6 @@ const Dashboard = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             กลับไปหน้าแรก
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/map')}>
-              🗺️ แผนที่
-            </Button>
-          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -369,6 +364,9 @@ const Dashboard = () => {
             >
               <Share2 className="mr-2 h-4 w-4" />
               แชร์ผ่าน LINE
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/map')}>
+              🗺️ แผนที่
             </Button>
             <Button variant="outline" onClick={() => navigate('/help')}>
               📖 คู่มือการใช้งาน
