@@ -1,5 +1,8 @@
 project_id = "jyvojztgptxidemjscgg"
 
+[functions.line-webhook]
+verify_jwt = false
+
 [functions.extract-report]
 verify_jwt = false
 
