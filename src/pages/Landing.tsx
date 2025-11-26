@@ -119,12 +119,29 @@ const Landing = () => {
 
           <motion.p 
             variants={itemVariants}
-            className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto"
+            className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto"
           >
-            Thai Flood Help - ใช้ AI ช่วยให้ข้อมูลขอความช่วยเหลือ
+            Thai Flood Help - รวมข้อมูลที่กระจัดกระจายใน Social Media และช่องทางต่างๆ
             <br />
-            ไปถึงคนที่พร้อมช่วยได้เร็วที่สุด
+            สกัดข้อมูลสำคัญด้วย AI เพื่อการช่วยเหลือที่รวดเร็วขึ้น
           </motion.p>
+
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-wrap items-center justify-center gap-3 mb-12 text-sm md:text-base"
+          >
+            <div className="px-4 py-2 bg-blue-100 dark:bg-blue-950 rounded-full text-blue-700 dark:text-blue-300 font-medium">
+              🎧 Social Listening
+            </div>
+            <div className="text-2xl text-gray-400">+</div>
+            <div className="px-4 py-2 bg-orange-100 dark:bg-orange-950 rounded-full text-orange-700 dark:text-orange-300 font-medium">
+              👥 Crowd Sourcing
+            </div>
+            <div className="text-2xl text-gray-400">+</div>
+            <div className="px-4 py-2 bg-purple-100 dark:bg-purple-950 rounded-full text-purple-700 dark:text-purple-300 font-medium">
+              🤖 AI Technology
+            </div>
+          </motion.div>
 
           {/* Real-time Stats */}
           <motion.div 
