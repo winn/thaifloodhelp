@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import heroFlood from "@/assets/hero-flood.jpg";
+import socialIconsCluster from "@/assets/social-icons-cluster.svg";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -209,63 +210,54 @@ const Landing = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-stretch max-w-5xl mx-auto px-4">
-            {/* Before */}
+          {/* 3-Column Layout */}
+          <div className="grid md:grid-cols-3 gap-8 md:gap-12 items-center max-w-6xl mx-auto px-4">
+            
+            {/* Left - Problem (ปัญหาด้านข้อมูล) */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 rounded-3xl p-8 md:p-10 border border-red-200 dark:border-red-800 flex flex-col min-h-[420px]"
+              className="text-center md:text-right space-y-4"
             >
-              <h3 className="text-2xl md:text-3xl font-bold text-red-600 mb-6 md:mb-8">😰 ก่อนมีระบบ</h3>
-              <ul className="space-y-4 md:space-y-5 flex-grow">
-                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
-                  <span className="text-red-500 text-xl md:text-2xl shrink-0">✗</span>
-                  <span>ข้อมูลกระจัดกระจายในหลายแพลตฟอร์ม</span>
-                </li>
-                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
-                  <span className="text-red-500 text-xl md:text-2xl shrink-0">✗</span>
-                  <span>ข้อมูลซ้ำซ้อน สับสน</span>
-                </li>
-                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
-                  <span className="text-red-500 text-xl md:text-2xl shrink-0">✗</span>
-                  <span>หาข้อมูลไม่เจอ เสียเวลา</span>
-                </li>
-                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
-                  <span className="text-red-500 text-xl md:text-2xl shrink-0">✗</span>
-                  <span>ไม่รู้ใครต้องการความช่วยเหลือด่วนที่สุด</span>
-                </li>
-              </ul>
+              <p className="text-gray-400 dark:text-gray-500 text-sm font-medium">ปัญหาด้านข้อมูล</p>
+              <h3 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-200">รวบรวม</h3>
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-base md:text-lg">
+                เมื่อข้อมูลกระจัดกระจายอยู่หลายแพลตฟอร์ม ซ้ำซ้อนสับสน
+                ค้นหาไม่เจอจนเสียเวลาและทำให้เราไม่รู้ด้วยว่าใครคือคนที่ต้องการความช่วยเหลือด่วนที่สุด
+              </p>
             </motion.div>
 
-            {/* After */}
+            {/* Center - Social Media Icons Image */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="flex items-center justify-center"
+            >
+              <img 
+                src={socialIconsCluster} 
+                alt="Social platforms cluster" 
+                className="w-full max-w-[300px] md:max-w-[400px] h-auto"
+              />
+            </motion.div>
+
+            {/* Right - Solution (แก้ไขปัญหาข้อมูล) */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 rounded-3xl p-8 md:p-10 border border-green-200 dark:border-green-800 flex flex-col min-h-[420px]"
+              className="text-center md:text-left space-y-4"
             >
-              <h3 className="text-2xl md:text-3xl font-bold text-green-600 mb-6 md:mb-8">✨ หลังมีระบบ</h3>
-              <ul className="space-y-4 md:space-y-5 flex-grow">
-                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
-                  <CheckCircle2 className="text-green-500 h-6 w-6 md:h-7 md:w-7 shrink-0" />
-                  <span>รวมข้อมูลจากทุกแหล่งในที่เดียว</span>
-                </li>
-                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
-                  <CheckCircle2 className="text-green-500 h-6 w-6 md:h-7 md:w-7 shrink-0" />
-                  <span>AI ตัดข้อมูลซ้ำอัตโนมัติ</span>
-                </li>
-                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
-                  <CheckCircle2 className="text-green-500 h-6 w-6 md:h-7 md:w-7 shrink-0" />
-                  <span>ค้นหาข้อมูลได้ง่ายและรวดเร็ว</span>
-                </li>
-                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
-                  <CheckCircle2 className="text-green-500 h-6 w-6 md:h-7 md:w-7 shrink-0" />
-                  <span>เรียงลำดับความเร่งด่วนอัตโนมัติ</span>
-                </li>
-              </ul>
+              <p className="text-gray-400 dark:text-gray-500 text-sm font-medium">แก้ไขปัญหาข้อมูล</p>
+              <h3 className="text-4xl md:text-5xl font-bold text-blue-500">จัดเรียง</h3>
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-base md:text-lg">
+                ระบบรวมข้อมูลจากทุกแหล่งไว้ในที่เดียว ให้ AI ตัดข้อมูลซ้ำอัตโนมัติ
+                ค้นหาข้อมูลได้ง่ายและรวดเร็ว พร้อมจัดเรียงลำดับความเร่งด่วนให้อัตโนมัติ
+              </p>
             </motion.div>
           </div>
         </div>
