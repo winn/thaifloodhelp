@@ -10,6 +10,7 @@ import Review from "./pages/Review";
 import Dashboard from "./pages/Dashboard";
 import ReportDetail from "./pages/ReportDetail";
 import Help from "./pages/Help";
+import Api from "./pages/Api";
 import NotFound from "./pages/NotFound";
 import Footer from "./components/Footer";
 
@@ -31,6 +32,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/report/:id" element={<ReportDetail />} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/api" element={<Api />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
