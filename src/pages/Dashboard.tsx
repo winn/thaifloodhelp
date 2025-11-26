@@ -73,7 +73,6 @@ const Dashboard = () => {
   const itemsPerPage = 50;
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isConvertingMapLinks, setIsConvertingMapLinks] = useState(false);
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -349,72 +348,6 @@ const Dashboard = () => {
     fetchReports();
   };
 
-  const handleConvertMapLinks = async () => {
-    setIsConvertingMapLinks(true);
-    try {
-      // Find all reports with map_link but no coordinates
-      const reportsToConvert = reports.filter(
-        r => r.map_link && r.map_link.trim() && (!r.location_lat || !r.location_long)
-      );
-
-      if (reportsToConvert.length === 0) {
-        toast.info('ไม่พบข้อมูลที่ต้องแปลง', {
-          description: 'ทุกรายการที่มี Google Maps link มีพิกัดแล้ว'
-        });
-        setIsConvertingMapLinks(false);
-        return;
-      }
-
-      toast.info(`กำลังแปลง ${reportsToConvert.length} รายการ...`);
-
-      let successCount = 0;
-      let failCount = 0;
-
-      for (const report of reportsToConvert) {
-        try {
-          const { data, error } = await supabase.functions.invoke('parse-map-link', {
-            body: { mapLink: report.map_link }
-          });
-
-          if (error) throw error;
-
-          if (data.success && data.lat && data.lng) {
-            // Update the report with coordinates
-            const { error: updateError } = await supabase
-              .from('reports')
-              .update({
-                location_lat: data.lat,
-                location_long: data.lng
-              })
-              .eq('id', report.id);
-
-            if (updateError) throw updateError;
-            successCount++;
-          } else {
-            failCount++;
-          }
-        } catch (err) {
-          console.error(`Error converting map link for report ${report.id}:`, err);
-          failCount++;
-        }
-      }
-
-      toast.success(`แปลงพิกัดเสร็จสิ้น`, {
-        description: `สำเร็จ ${successCount} รายการ, ล้มเหลว ${failCount} รายการ`
-      });
-
-      // Refresh the reports
-      await fetchReports();
-    } catch (error) {
-      console.error('Error converting map links:', error);
-      toast.error('เกิดข้อผิดพลาด', {
-        description: 'ไม่สามารถแปลง Google Maps links ได้'
-      });
-    } finally {
-      setIsConvertingMapLinks(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -607,23 +540,6 @@ const Dashboard = () => {
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'กำลังรีเฟรช...' : 'รีเฟรช'}
-            </Button>
-            <Button
-              onClick={handleConvertMapLinks}
-              variant="outline"
-              disabled={isConvertingMapLinks}
-            >
-              {isConvertingMapLinks ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  กำลังแปลง...
-                </>
-              ) : (
-                <>
-                  <MapPin className="mr-2 h-4 w-4" />
-                  แปลง Google Maps
-                </>
-              )}
             </Button>
             <Button
               onClick={exportToCSV}
