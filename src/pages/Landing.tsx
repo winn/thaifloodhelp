@@ -226,31 +226,31 @@ const Landing = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-stretch max-w-5xl mx-auto px-4">
             {/* Before */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 rounded-3xl p-10 border border-red-200 dark:border-red-800"
+              className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 rounded-3xl p-8 md:p-10 border border-red-200 dark:border-red-800 flex flex-col min-h-[420px]"
             >
-              <h3 className="text-3xl font-bold text-red-600 mb-8">😰 ก่อนมีระบบ</h3>
-              <ul className="space-y-5">
-                <li className="flex items-start gap-4 text-lg text-gray-700 dark:text-gray-300">
-                  <span className="text-red-500 text-2xl shrink-0">✗</span>
+              <h3 className="text-2xl md:text-3xl font-bold text-red-600 mb-6 md:mb-8">😰 ก่อนมีระบบ</h3>
+              <ul className="space-y-4 md:space-y-5 flex-grow">
+                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
+                  <span className="text-red-500 text-xl md:text-2xl shrink-0">✗</span>
                   <span>ข้อมูลกระจัดกระจายในหลายแพลตฟอร์ม</span>
                 </li>
-                <li className="flex items-start gap-4 text-lg text-gray-700 dark:text-gray-300">
-                  <span className="text-red-500 text-2xl shrink-0">✗</span>
+                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
+                  <span className="text-red-500 text-xl md:text-2xl shrink-0">✗</span>
                   <span>ข้อมูลซ้ำซ้อน สับสน</span>
                 </li>
-                <li className="flex items-start gap-4 text-lg text-gray-700 dark:text-gray-300">
-                  <span className="text-red-500 text-2xl shrink-0">✗</span>
+                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
+                  <span className="text-red-500 text-xl md:text-2xl shrink-0">✗</span>
                   <span>หาข้อมูลไม่เจอ เสียเวลา</span>
                 </li>
-                <li className="flex items-start gap-4 text-lg text-gray-700 dark:text-gray-300">
-                  <span className="text-red-500 text-2xl shrink-0">✗</span>
+                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
+                  <span className="text-red-500 text-xl md:text-2xl shrink-0">✗</span>
                   <span>ไม่รู้ใครต้องการความช่วยเหลือด่วนที่สุด</span>
                 </li>
               </ul>
@@ -262,24 +262,24 @@ const Landing = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 rounded-3xl p-10 border border-green-200 dark:border-green-800"
+              className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 rounded-3xl p-8 md:p-10 border border-green-200 dark:border-green-800 flex flex-col min-h-[420px]"
             >
-              <h3 className="text-3xl font-bold text-green-600 mb-8">✨ หลังมีระบบ</h3>
-              <ul className="space-y-5">
-                <li className="flex items-start gap-4 text-lg text-gray-700 dark:text-gray-300">
-                  <CheckCircle2 className="text-green-500 h-7 w-7 shrink-0" />
+              <h3 className="text-2xl md:text-3xl font-bold text-green-600 mb-6 md:mb-8">✨ หลังมีระบบ</h3>
+              <ul className="space-y-4 md:space-y-5 flex-grow">
+                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
+                  <CheckCircle2 className="text-green-500 h-6 w-6 md:h-7 md:w-7 shrink-0" />
                   <span>รวมข้อมูลจากทุกแหล่งในที่เดียว</span>
                 </li>
-                <li className="flex items-start gap-4 text-lg text-gray-700 dark:text-gray-300">
-                  <CheckCircle2 className="text-green-500 h-7 w-7 shrink-0" />
+                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
+                  <CheckCircle2 className="text-green-500 h-6 w-6 md:h-7 md:w-7 shrink-0" />
                   <span>AI ตัดข้อมูลซ้ำอัตโนมัติ</span>
                 </li>
-                <li className="flex items-start gap-4 text-lg text-gray-700 dark:text-gray-300">
-                  <CheckCircle2 className="text-green-500 h-7 w-7 shrink-0" />
+                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
+                  <CheckCircle2 className="text-green-500 h-6 w-6 md:h-7 md:w-7 shrink-0" />
                   <span>ค้นหาข้อมูลได้ง่ายและรวดเร็ว</span>
                 </li>
-                <li className="flex items-start gap-4 text-lg text-gray-700 dark:text-gray-300">
-                  <CheckCircle2 className="text-green-500 h-7 w-7 shrink-0" />
+                <li className="flex items-start gap-3 md:gap-4 text-base md:text-lg text-gray-700 dark:text-gray-300">
+                  <CheckCircle2 className="text-green-500 h-6 w-6 md:h-7 md:w-7 shrink-0" />
                   <span>เรียงลำดับความเร่งด่วนอัตโนมัติ</span>
                 </li>
               </ul>
