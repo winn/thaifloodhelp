@@ -23,6 +23,8 @@ const Map = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedBasemap, setSelectedBasemap] = useState('osm')
   const [showFloodLayer, setShowFloodLayer] = useState(false)
+  const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(false)
+  const [showRescueZoneLayer, setShowRescueZoneLayer] = useState(false)
   const { toast } = useToast()
 
   // Get map configuration from env
@@ -159,6 +161,8 @@ const Map = () => {
           showLegend={true}
           selectedBasemap={selectedBasemap}
           showFloodLayer={showFloodLayer}
+          showFloodDepthLayer={showFloodDepthLayer}
+          showRescueZoneLayer={showRescueZoneLayer}
         />
       </div>
 
@@ -184,6 +188,10 @@ const Map = () => {
         onBasemapChange={setSelectedBasemap}
         showFloodLayer={showFloodLayer}
         onFloodLayerToggle={setShowFloodLayer}
+        showFloodDepthLayer={showFloodDepthLayer}
+        onFloodDepthLayerToggle={setShowFloodDepthLayer}
+        showRescueZoneLayer={showRescueZoneLayer}
+        onRescueZoneLayerToggle={setShowRescueZoneLayer}
       />
     </div>
   )

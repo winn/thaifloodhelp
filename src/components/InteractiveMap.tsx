@@ -3,6 +3,8 @@ import 'leaflet'
 import 'leaflet.markercluster'
 
 import L from 'leaflet'
+// @ts-ignore - leaflet-omnivore doesn't have TypeScript definitions
+import omnivore from 'leaflet-omnivore'
 // Fix for default marker icon issue with Webpack
 import icon from 'leaflet/dist/images/marker-icon.png'
 import iconShadow from 'leaflet/dist/images/marker-shadow.png'
@@ -34,6 +36,8 @@ interface InteractiveMapProps {
   showLegend?: boolean
   selectedBasemap?: string
   showFloodLayer?: boolean
+  showFloodDepthLayer?: boolean
+  showRescueZoneLayer?: boolean
 }
 
 const URGENCY_COLORS = {
@@ -51,12 +55,16 @@ const InteractiveMap = ({
   showLegend = true,
   selectedBasemap = 'osm',
   showFloodLayer = false,
+  showFloodDepthLayer = false,
+  showRescueZoneLayer = false,
 }: InteractiveMapProps) => {
   const mapRef = useRef<L.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const markersRef = useRef<any>(null)
   const basemapLayerRef = useRef<L.TileLayer | null>(null)
   const floodLayerRef = useRef<L.TileLayer | null>(null)
+  const floodDepthLayerRef = useRef<L.LayerGroup | null>(null)
+  const rescueZoneLayerRef = useRef<L.LayerGroup | null>(null)
   const navigate = useNavigate()
 
   // Ensure marker cluster is attached to the map (useful after basemap/flood toggles)
@@ -115,6 +123,12 @@ const InteractiveMap = ({
     map.createPane('floodPane')
     map.getPane('floodPane')!.style.zIndex = '200' // Flood layer in middle
 
+    map.createPane('floodDepthPane')
+    map.getPane('floodDepthPane')!.style.zIndex = '300' // Flood depth layer
+
+    map.createPane('rescueZonePane')
+    map.getPane('rescueZonePane')!.style.zIndex = '400' // Rescue zone layer
+
     // markerPane already exists with default z-index = 600 (on top)
 
     // Add initial basemap tile layer
@@ -151,6 +165,14 @@ const InteractiveMap = ({
             <div class="map-legend-item">
               <div class="map-legend-color" style="border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.6);"></div>
               <span>พื้นที่น้ำท่วม (GISTDA)</span>
+            </div>
+            <div class="map-legend-item" style="margin-top: 8px;">
+              <div class="map-legend-color" style="border-color: #0ea5e9; background-color: rgba(14, 165, 233, 0.4);"></div>
+              <span>ความลึกน้ำท่วม (25/11/68)</span>
+            </div>
+            <div class="map-legend-item" style="margin-top: 8px;">
+              <div class="map-legend-color" style="border-color: #f97316; background-color: rgba(249, 115, 22, 0.3);"></div>
+              <span>โซนช่วยเหลือหาดใหญ่</span>
             </div>
           </div>
         `
@@ -229,6 +251,138 @@ const InteractiveMap = ({
     // Flood layer add/remove can occasionally reorder panes; ensure markers remain visible
     ensureMarkersOnMap()
   }, [showFloodLayer])
+
+  // Handle flood depth layer (KML) toggle
+  useEffect(() => {
+    if (!mapRef.current) return
+
+    if (showFloodDepthLayer) {
+      // Add flood depth layer if it doesn't exist
+      if (!floodDepthLayerRef.current) {
+        const layer = omnivore
+          .kml('/data/poly_s1a_20251124_0602.kml')
+          .on('ready', function (this: any) {
+            // Style the polygons based on depth
+            this.eachLayer((layer: any) => {
+              if (layer.feature && layer.feature.properties) {
+                const name = layer.feature.properties.name || ''
+                // Parse depth value from name
+                const depth = parseFloat(name)
+
+                // Set color based on depth
+                let color = '#0ea5e9'
+                let opacity = 0.3
+
+                if (!isNaN(depth)) {
+                  if (depth > 2) {
+                    color = '#dc2626' // Deep red for >2m
+                    opacity = 0.5
+                  } else if (depth > 1) {
+                    color = '#f97316' // Orange for 1-2m
+                    opacity = 0.4
+                  } else if (depth > 0.5) {
+                    color = '#facc15' // Yellow for 0.5-1m
+                    opacity = 0.35
+                  } else {
+                    color = '#0ea5e9' // Light blue for <0.5m
+                    opacity = 0.3
+                  }
+                }
+
+                layer.setStyle({
+                  fillColor: color,
+                  fillOpacity: opacity,
+                  color: color,
+                  weight: 1,
+                  opacity: 0.6,
+                  pane: 'floodDepthPane',
+                })
+
+                // Add popup with depth info
+                const depthText = !isNaN(depth)
+                  ? `${depth.toFixed(2)} เมตร`
+                  : 'ไม่ทราบ'
+                layer.bindPopup(`
+                  <div style="padding: 8px;">
+                    <strong>ความลึกน้ำท่วม</strong><br/>
+                    <span style="font-size: 16px; color: ${color}; font-weight: bold;">${depthText}</span><br/>
+                    <small style="color: #666;">ข้อมูล GISTDA วันที่ 25 พ.ย. 2568</small>
+                  </div>
+                `)
+              }
+            })
+          })
+          .addTo(mapRef.current)
+
+        floodDepthLayerRef.current = layer
+      }
+    } else {
+      // Remove flood depth layer if it exists
+      if (
+        floodDepthLayerRef.current &&
+        mapRef.current.hasLayer(floodDepthLayerRef.current)
+      ) {
+        mapRef.current.removeLayer(floodDepthLayerRef.current)
+        floodDepthLayerRef.current = null
+      }
+    }
+
+    ensureMarkersOnMap()
+  }, [showFloodDepthLayer])
+
+  // Handle rescue zone layer (KMZ) toggle
+  useEffect(() => {
+    if (!mapRef.current) return
+
+    if (showRescueZoneLayer) {
+      // Add rescue zone layer if it doesn't exist
+      if (!rescueZoneLayerRef.current) {
+        const layer = omnivore
+          .kmz('/data/Hat_Yai_Rescue.kmz')
+          .on('ready', function (this: any) {
+            // Style the rescue zones
+            this.eachLayer((layer: any) => {
+              if (layer.feature && layer.feature.properties) {
+                layer.setStyle({
+                  fillColor: '#f97316',
+                  fillOpacity: 0.25,
+                  color: '#f97316',
+                  weight: 2,
+                  opacity: 0.7,
+                  pane: 'rescueZonePane',
+                })
+
+                // Add popup with zone info
+                const name = layer.feature.properties.name || 'โซนช่วยเหลือ'
+                const description =
+                  layer.feature.properties.description || ''
+                layer.bindPopup(`
+                  <div style="padding: 8px;">
+                    <strong>${name}</strong><br/>
+                    ${description ? `<p style="margin-top: 4px; font-size: 13px;">${description}</p>` : ''}
+                    <small style="color: #666;">โซนช่วยเหลืออำเภอหาดใหญ่<br/>อัพเดท 25 พ.ย. 2568</small>
+                  </div>
+                `)
+              }
+            })
+          })
+          .addTo(mapRef.current)
+
+        rescueZoneLayerRef.current = layer
+      }
+    } else {
+      // Remove rescue zone layer if it exists
+      if (
+        rescueZoneLayerRef.current &&
+        mapRef.current.hasLayer(rescueZoneLayerRef.current)
+      ) {
+        mapRef.current.removeLayer(rescueZoneLayerRef.current)
+        rescueZoneLayerRef.current = null
+      }
+    }
+
+    ensureMarkersOnMap()
+  }, [showRescueZoneLayer])
 
   // Update markers when reports change
   useEffect(() => {

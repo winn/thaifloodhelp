@@ -12,6 +12,10 @@ interface BasemapControlProps {
   onBasemapChange: (basemapId: string) => void
   showFloodLayer: boolean
   onFloodLayerToggle: (show: boolean) => void
+  showFloodDepthLayer: boolean
+  onFloodDepthLayerToggle: (show: boolean) => void
+  showRescueZoneLayer: boolean
+  onRescueZoneLayerToggle: (show: boolean) => void
 }
 
 const BasemapControl = ({
@@ -19,6 +23,10 @@ const BasemapControl = ({
   onBasemapChange,
   showFloodLayer,
   onFloodLayerToggle,
+  showFloodDepthLayer,
+  onFloodDepthLayerToggle,
+  showRescueZoneLayer,
+  onRescueZoneLayerToggle,
 }: BasemapControlProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -93,6 +101,50 @@ const BasemapControl = ({
               >
                 พื้นที่น้ำท่วม
               </Label>
+            </div>
+
+            {/* Flood Depth Layer Toggle */}
+            <div className="flex items-start space-x-2 px-3 py-2">
+              <Checkbox
+                id="flood-depth-layer"
+                checked={showFloodDepthLayer}
+                onCheckedChange={(checked) =>
+                  onFloodDepthLayerToggle(checked === true)
+                }
+              />
+              <div className="flex-1">
+                <Label
+                  htmlFor="flood-depth-layer"
+                  className="text-sm font-normal cursor-pointer text-gray-900 leading-tight"
+                >
+                  ความลึกน้ำท่วม
+                </Label>
+                <p className="text-xs text-gray-500 mt-0.5 leading-tight">
+                  25/11/2568 โดย GISTDA
+                </p>
+              </div>
+            </div>
+
+            {/* Rescue Zone Layer Toggle */}
+            <div className="flex items-start space-x-2 px-3 py-2">
+              <Checkbox
+                id="rescue-zone-layer"
+                checked={showRescueZoneLayer}
+                onCheckedChange={(checked) =>
+                  onRescueZoneLayerToggle(checked === true)
+                }
+              />
+              <div className="flex-1">
+                <Label
+                  htmlFor="rescue-zone-layer"
+                  className="text-sm font-normal cursor-pointer text-gray-900 leading-tight"
+                >
+                  โซนช่วยเหลือหาดใหญ่
+                </Label>
+                <p className="text-xs text-gray-500 mt-0.5 leading-tight">
+                  25/11/2568 โดย GISTDA
+                </p>
+              </div>
             </div>
           </div>
         </Card>

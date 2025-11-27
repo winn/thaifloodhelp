@@ -67,6 +67,7 @@
     "framer-motion": "^12.23.24",
     "input-otp": "^1.4.2",
     "leaflet": "^1.9.4",
+    "leaflet-omnivore": "^0.3.4",
     "leaflet.heat": "^0.2.0",
     "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.462.0",
