@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,10 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Phone, Clock, User, HandHeart, Users, Eye, List, Upload, X, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Clock, User, HandHeart, Users, Eye, List, Upload, X, Edit, Trash2, LogIn } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const HELP_TYPES = [
   'น้ำ/อาหาร',
@@ -41,7 +42,14 @@ const SERVICE_TYPES = [
 
 export default function HelpBrowse() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'request-form' | 'offer-form' | 'view-requests' | 'view-offers'>('request-form');
+  
+  useEffect(() => {
+    if (!user && (activeTab === 'request-form' || activeTab === 'offer-form')) {
+      toast.error('กรุณาเข้าสู่ระบบก่อนโพสต์');
+    }
+  }, [user, activeTab]);
   
   const [requestForm, setRequestForm] = useState({
     title: '',
@@ -139,6 +147,12 @@ export default function HelpBrowse() {
 
   const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast.error('กรุณาเข้าสู่ระบบก่อนโพสต์');
+      navigate('/auth');
+      return;
+    }
     
     if (!requestForm.title || !requestForm.description || !requestForm.contactName) {
       toast.error('กรุณากรอกข้อมูลที่จำเป็น');
@@ -241,6 +255,12 @@ export default function HelpBrowse() {
 
   const handleOfferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast.error('กรุณาเข้าสู่ระบบก่อนโพสต์');
+      navigate('/auth');
+      return;
+    }
     
     if (!offerForm.name || !offerForm.description || !offerForm.contactInfo) {
       toast.error('กรุณากรอกข้อมูลที่จำเป็น');
