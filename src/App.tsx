@@ -29,8 +29,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <Navbar />
         <div className="flex flex-col min-h-screen">
-          <Navbar />
           <div className="flex-1">
             <Routes>
               <Route path="/" element={<Landing />} />
