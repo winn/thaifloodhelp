@@ -295,7 +295,7 @@ export default function HelpBrowse() {
                     <Input
                       value={requestForm.title}
                       onChange={(e) => setRequestForm({ ...requestForm, title: e.target.value })}
-                      placeholder="เช่น: บ้านท่วมน้ำ ต้องการอาหารและน้ำดื่ม"
+                      placeholder="เช่น: ต้องการบริการช่วยยกต้นไม้ ต้องการบริการล้างบ้าน ต้องการช่างไฟ"
                       required
                     />
                   </div>
