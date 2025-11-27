@@ -170,6 +170,8 @@ const Landing = () => {
           </motion.div>
         </motion.div>
       </section>
-    </div>;
-};
+    </div>
+  )
+}
+
 export default Landing;
