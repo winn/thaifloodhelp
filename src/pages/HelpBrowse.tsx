@@ -56,10 +56,10 @@ export default function HelpBrowse() {
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            รายการความช่วยเหลือ
+            ขอความช่วยเหลือ
           </h1>
           <p className="text-muted-foreground">
-            เรียกดูรายการผู้ต้องการความช่วยเหลือและอาสาสมัคร
+            โพสต์ความต้องการความช่วยเหลือของคุณ หรือเสนอให้ความช่วยเหลือ
           </p>
         </div>
 
@@ -67,15 +67,25 @@ export default function HelpBrowse() {
           <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
             <TabsTrigger value="requests" className="gap-2">
               <HandHeart className="w-4 h-4" />
-              ผู้ต้องการความช่วยเหลือ ({helpRequests.length})
+              ขอความช่วยเหลือ
             </TabsTrigger>
             <TabsTrigger value="offers" className="gap-2">
               <Users className="w-4 h-4" />
-              อาสาสมัคร ({helpOffers.length})
+              เสนอให้ความช่วยเหลือ
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="requests" className="space-y-4">
+            <div className="flex justify-end mb-4">
+              <Button
+                onClick={() => navigate('/help-request')}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+              >
+                <HandHeart className="w-4 h-4 mr-2" />
+                ขอความช่วยเหลือ
+              </Button>
+            </div>
+            
             {loadingRequests ? (
               <div className="text-center py-12 text-muted-foreground">กำลังโหลด...</div>
             ) : helpRequests.length === 0 ? (
@@ -152,6 +162,16 @@ export default function HelpBrowse() {
           </TabsContent>
 
           <TabsContent value="offers" className="space-y-4">
+            <div className="flex justify-end mb-4">
+              <Button
+                onClick={() => navigate('/help-offer')}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                เสนอให้ความช่วยเหลือ
+              </Button>
+            </div>
+            
             {loadingOffers ? (
               <div className="text-center py-12 text-muted-foreground">กำลังโหลด...</div>
             ) : helpOffers.length === 0 ? (

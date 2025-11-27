@@ -1,13 +1,11 @@
 import { motion } from 'framer-motion'
-import { MessageSquarePlus, Search, HandHeart, Users } from 'lucide-react'
+import { MessageSquarePlus, Search, HandHeart } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import heroFlood from '@/assets/hero-flood.jpg'
 import { Button } from '@/components/ui/button'
 import { useLandingStats } from '@/hooks/use-stats'
-import { useHelpStats } from '@/hooks/use-help-stats'
 import { useEffect, useState } from 'react'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 
 
@@ -20,10 +18,6 @@ const Landing = () => {
       urgentCount: 0
     }
   } = useLandingStats();
-  
-  const { data: helpStats = { helpRequestsCount: 0, helpOffersCount: 0 } } = useHelpStats();
-  
-  const [mode, setMode] = useState<'report' | 'help'>('report');
   const containerVariants = {
     hidden: {
       opacity: 0
@@ -90,28 +84,6 @@ const Landing = () => {
           <motion.h1 variants={itemVariants} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-4 leading-tight px-4 drop-shadow-lg [text-shadow:_0_2px_10px_rgb(0_0_0_/_40%)]">
             Thai Flood Help
           </motion.h1>
-          
-          {/* Mode Toggle */}
-          <motion.div variants={itemVariants} className="flex justify-center mb-4 md:mb-6">
-            <Tabs value={mode} onValueChange={(v) => setMode(v as 'report' | 'help')} className="w-auto">
-              <TabsList className="bg-white/20 backdrop-blur-md border border-white/30 p-1">
-                <TabsTrigger 
-                  value="report" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-600 text-white font-medium px-6 py-2"
-                >
-                  <MessageSquarePlus className="w-4 h-4 mr-2" />
-                  รายงานภัย
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="help" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-600 text-white font-medium px-6 py-2"
-                >
-                  <HandHeart className="w-4 h-4 mr-2" />
-                  ขอ/ให้ความช่วยเหลือ
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </motion.div>
 
           <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white mb-2 md:mb-3 font-medium px-4 max-w-4xl mx-auto drop-shadow-md [text-shadow:_0_1px_8px_rgb(0_0_0_/_50%)]">
             เว็บไซต์ที่ช่วยรวบรวมข้อมูลที่กระจัดกระจายตามช่องทางต่างๆ
@@ -145,125 +117,76 @@ const Landing = () => {
           </motion.div>
 
           {/* Real-time Stats with Glassmorphism */}
-          {mode === 'report' ? (
-            <motion.div
-              variants={itemVariants}
-              className="grid grid-cols-2 gap-3 md:gap-4 max-w-md md:max-w-2xl mx-auto mb-6 md:mb-8 px-4"
-            >
-              <div className="bg-white/15 backdrop-blur-lg rounded-lg md:rounded-xl p-4 md:p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 will-change-transform">
-                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1">
-                  {stats.totalReports}
-                </div>
-                <div className="text-xs sm:text-sm text-white/80">
-                  รายงานในระบบ
-                </div>
+          <motion.div
+            variants={itemVariants}
+            className="grid grid-cols-2 gap-3 md:gap-4 max-w-md md:max-w-2xl mx-auto mb-6 md:mb-8 px-4"
+          >
+            <div className="bg-white/15 backdrop-blur-lg rounded-lg md:rounded-xl p-4 md:p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 will-change-transform">
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1">
+                {stats.totalReports}
               </div>
-              <div className="bg-white/15 backdrop-blur-lg rounded-lg md:rounded-xl p-4 md:p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 will-change-transform">
-                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1">
-                  {stats.urgentCount}
-                </div>
-                <div className="text-xs sm:text-sm text-white/80">
-                  เคสเร่งด่วน
-                </div>
+              <div className="text-xs sm:text-sm text-white/80">
+                รายงานในระบบ
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              variants={itemVariants}
-              className="grid grid-cols-2 gap-3 md:gap-4 max-w-md md:max-w-2xl mx-auto mb-6 md:mb-8 px-4"
-            >
-              <div className="bg-white/15 backdrop-blur-lg rounded-lg md:rounded-xl p-4 md:p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 will-change-transform">
-                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1">
-                  {helpStats.helpRequestsCount}
-                </div>
-                <div className="text-xs sm:text-sm text-white/80">
-                  ผู้ต้องการความช่วยเหลือ
-                </div>
+            </div>
+            <div className="bg-white/15 backdrop-blur-lg rounded-lg md:rounded-xl p-4 md:p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 will-change-transform">
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1">
+                {stats.urgentCount}
               </div>
-              <div className="bg-white/15 backdrop-blur-lg rounded-lg md:rounded-xl p-4 md:p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 will-change-transform">
-                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1">
-                  {helpStats.helpOffersCount}
-                </div>
-                <div className="text-xs sm:text-sm text-white/80">
-                  อาสาสมัคร/ผู้ให้ความช่วยเหลือ
-                </div>
+              <div className="text-xs sm:text-sm text-white/80">
+                เคสเร่งด่วน
               </div>
-            </motion.div>
-          )}
+            </div>
+          </motion.div>
 
           {/* CTA Buttons */}
           <motion.div
             variants={itemVariants}
             className="flex flex-col gap-3 md:gap-4 justify-center items-center max-w-xl md:max-w-2xl mx-auto px-4"
           >
-            {mode === 'report' ? (
-              <>
-                {/* Primary CTA - ช่วยใส่ข้อมูล */}
-                <Button
-                  size="lg"
-                  className="w-full text-sm sm:text-base md:text-lg h-14 sm:h-16 md:h-18 px-4 sm:px-6 md:px-8 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-2xl shadow-orange-500/50 font-bold rounded-lg md:rounded-xl border-2 border-white/30 hover:scale-[1.02] active:scale-100 transition-transform duration-200"
-                  onClick={() => navigate('/extraction')}
-                >
-                  <MessageSquarePlus className="mr-2 h-5 sm:h-6 md:h-7 w-5 sm:w-6 md:w-7 flex-shrink-0" />
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-sm sm:text-base md:text-lg leading-tight">
-                      ช่วยใส่ข้อมูลจาก Social
-                    </span>
-                    <span className="text-xs font-normal opacity-90 hidden sm:block leading-tight">
-                      คุณสามารถช่วยชีวิตได้ด้วยการใส่ข้อมูล
-                    </span>
-                  </div>
-                </Button>
+            {/* Primary CTA - ช่วยใส่ข้อมูล */}
+            <Button
+              size="lg"
+              className="w-full text-sm sm:text-base md:text-lg h-14 sm:h-16 md:h-18 px-4 sm:px-6 md:px-8 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-2xl shadow-orange-500/50 font-bold rounded-lg md:rounded-xl border-2 border-white/30 hover:scale-[1.02] active:scale-100 transition-transform duration-200"
+              onClick={() => navigate('/extraction')}
+            >
+              <MessageSquarePlus className="mr-2 h-5 sm:h-6 md:h-7 w-5 sm:w-6 md:w-7 flex-shrink-0" />
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="text-sm sm:text-base md:text-lg leading-tight">
+                  ช่วยใส่ข้อมูลจาก Social
+                </span>
+                <span className="text-xs font-normal opacity-90 hidden sm:block leading-tight">
+                  คุณสามารถช่วยชีวิตได้ด้วยการใส่ข้อมูล
+                </span>
+              </div>
+            </Button>
 
-                {/* Secondary CTA - ค้นหา */}
-                <Button
-                  size="lg"
-                  className="w-full text-xs sm:text-sm md:text-base h-12 sm:h-14 px-4 sm:px-6 md:px-8 bg-white text-blue-600 hover:bg-white/90 shadow-xl font-semibold rounded-lg hover:scale-[1.02] active:scale-100 transition-transform duration-200"
-                  onClick={() => navigate('/dashboard')}
-                >
-                  <Search className="mr-2 h-4 sm:h-5 w-4 sm:w-5 flex-shrink-0" />
-                  <span>ค้นหาผู้ต้องการความช่วยเหลือ</span>
-                </Button>
-              </>
-            ) : (
-              <>
-                {/* Help/Job Match CTAs */}
-                <Button
-                  size="lg"
-                  className="w-full text-sm sm:text-base md:text-lg h-14 sm:h-16 md:h-18 px-4 sm:px-6 md:px-8 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-2xl shadow-orange-500/50 font-bold rounded-lg md:rounded-xl border-2 border-white/30 hover:scale-[1.02] active:scale-100 transition-transform duration-200"
-                  onClick={() => navigate('/help-request')}
-                >
-                  <HandHeart className="mr-2 h-5 sm:h-6 md:h-7 w-5 sm:w-6 md:w-7 flex-shrink-0" />
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-sm sm:text-base md:text-lg leading-tight">
-                      ขอความช่วยเหลือ
-                    </span>
-                    <span className="text-xs font-normal opacity-90 hidden sm:block leading-tight">
-                      โพสต์ความต้องการความช่วยเหลือของคุณ
-                    </span>
-                  </div>
-                </Button>
+            {/* Help/Job Match CTA */}
+            <Button
+              size="lg"
+              className="w-full text-sm sm:text-base md:text-lg h-14 sm:h-16 md:h-18 px-4 sm:px-6 md:px-8 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-2xl shadow-orange-500/50 font-bold rounded-lg md:rounded-xl border-2 border-white/30 hover:scale-[1.02] active:scale-100 transition-transform duration-200"
+              onClick={() => navigate('/help-browse')}
+            >
+              <HandHeart className="mr-2 h-5 sm:h-6 md:h-7 w-5 sm:w-6 md:w-7 flex-shrink-0" />
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="text-sm sm:text-base md:text-lg leading-tight">
+                  ขอความช่วยเหลือ
+                </span>
+                <span className="text-xs font-normal opacity-90 hidden sm:block leading-tight">
+                  โพสต์ความต้องการความช่วยเหลือของคุณ
+                </span>
+              </div>
+            </Button>
 
-                <Button
-                  size="lg"
-                  className="w-full text-xs sm:text-sm md:text-base h-12 sm:h-14 px-4 sm:px-6 md:px-8 bg-white text-blue-600 hover:bg-white/90 shadow-xl font-semibold rounded-lg hover:scale-[1.02] active:scale-100 transition-transform duration-200"
-                  onClick={() => navigate('/help-offer')}
-                >
-                  <Users className="mr-2 h-4 sm:h-5 w-4 sm:w-5 flex-shrink-0" />
-                  <span>เสนอให้ความช่วยเหลือ</span>
-                </Button>
-                
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full text-xs sm:text-sm md:text-base h-12 sm:h-14 px-4 sm:px-6 md:px-8 bg-white/10 backdrop-blur-md text-white border-2 border-white/30 hover:bg-white/20 shadow-xl font-semibold rounded-lg hover:scale-[1.02] active:scale-100 transition-transform duration-200"
-                  onClick={() => navigate('/help-browse')}
-                >
-                  <Search className="mr-2 h-4 sm:h-5 w-4 sm:w-5 flex-shrink-0" />
-                  <span>เรียกดูรายการทั้งหมด</span>
-                </Button>
-              </>
-            )}
+            {/* Secondary CTA - ค้นหา */}
+            <Button
+              size="lg"
+              className="w-full text-xs sm:text-sm md:text-base h-12 sm:h-14 px-4 sm:px-6 md:px-8 bg-white text-blue-600 hover:bg-white/90 shadow-xl font-semibold rounded-lg hover:scale-[1.02] active:scale-100 transition-transform duration-200"
+              onClick={() => navigate('/dashboard')}
+            >
+              <Search className="mr-2 h-4 sm:h-5 w-4 sm:w-5 flex-shrink-0" />
+              <span>ค้นหาผู้ประสบภัย</span>
+            </Button>
           </motion.div>
         </motion.div>
       </section>
