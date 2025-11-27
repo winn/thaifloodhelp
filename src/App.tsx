@@ -30,7 +30,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Navbar />
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen pt-14 sm:pt-16">
           <div className="flex-1">
             <Routes>
               <Route path="/" element={<Landing />} />
