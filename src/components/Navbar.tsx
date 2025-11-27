@@ -80,7 +80,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="relative z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-2 sm:px-4">
         <div className="flex h-14 sm:h-16 items-center justify-between gap-1 sm:gap-2">
           {/* Logo/Brand */}
