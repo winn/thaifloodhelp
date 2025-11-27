@@ -1,36 +1,40 @@
-import { motion } from 'framer-motion'
-import { MessageSquarePlus, Search } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-
-import heroFlood from '@/assets/hero-flood.jpg'
-import { Button } from '@/components/ui/button'
-import { useLandingStats } from '@/hooks/use-stats'
-
+import { motion } from 'framer-motion';
+import { MessageSquarePlus, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import heroFlood from '@/assets/hero-flood.jpg';
+import { Button } from '@/components/ui/button';
+import { useLandingStats } from '@/hooks/use-stats';
 const Landing = () => {
-  const navigate = useNavigate()
-  const { data: stats = { totalReports: 0, helpedCount: 0, urgentCount: 0 } } =
-    useLandingStats()
-
+  const navigate = useNavigate();
+  const {
+    data: stats = {
+      totalReports: 0,
+      helpedCount: 0,
+      urgentCount: 0
+    }
+  } = useLandingStats();
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: {
+      opacity: 0
+    },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.15,
-      },
-    },
-  }
-
+        staggerChildren: 0.15
+      }
+    }
+  };
   const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
+    hidden: {
+      y: 30,
+      opacity: 0
+    },
     visible: {
       y: 0,
-      opacity: 1,
-    },
-  }
-
-  return (
-    <div className="min-h-screen">
+      opacity: 1
+    }
+  };
+  return <div className="min-h-screen">
       {/* Hero Section with Background Image */}
       <section className="relative overflow-hidden py-12 md:py-16 px-4 min-h-[calc(100vh-4rem)] flex items-center bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroFlood})` }}
@@ -38,41 +42,24 @@ const Landing = () => {
         {/* Black overlay with 50% opacity */}
         <div className="absolute inset-0 bg-black/50 -z-10" />
 
-        <motion.div
-          className="max-w-6xl mx-auto text-center relative z-10 w-full"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
-          <motion.h1
-            variants={itemVariants}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-4 leading-tight px-4"
-          >
+        <motion.div className="max-w-6xl mx-auto text-center relative z-10 w-full" initial="hidden" animate="visible" variants={containerVariants}>
+          <motion.h1 variants={itemVariants} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-4 leading-tight px-4">
             Thai Flood Help
           </motion.h1>
 
-          <motion.p
-            variants={itemVariants}
-            className="text-sm sm:text-base md:text-lg text-white/95 mb-2 md:mb-3 font-medium px-4 max-w-4xl mx-auto"
-          >
+          <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white/95 mb-2 md:mb-3 font-medium px-4 max-w-4xl mx-auto">
             เว็บไซต์ที่ช่วยรวบรวมข้อมูลที่กระจัดกระจายตามช่องทางต่างๆ
             <br />
             โดยให้ AI สกัดออกมาเป็นประเด็นสำคัญ
             เพื่อให้การช่วยเหลือได้รวดเร็วขึ้น
           </motion.p>
 
-          <motion.p
-            variants={itemVariants}
-            className="text-sm sm:text-base md:text-lg text-white/80 mb-4 md:mb-6 px-4"
-          >
+          <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white/80 mb-4 md:mb-6 px-4">
             ทุกวินาที • มีคนรอความช่วยเหลือ
           </motion.p>
 
           {/* Technology Badges */}
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-6 md:mb-8 text-xs sm:text-sm px-4"
-          >
+          <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-6 md:mb-8 text-xs sm:text-sm px-4">
             <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-md rounded-full text-white font-medium border border-white/30 whitespace-nowrap">
               🎧 Social Listening
             </div>
@@ -141,8 +128,6 @@ const Landing = () => {
           </motion.div>
         </motion.div>
       </section>
-    </div>
-  )
-}
-
-export default Landing
+    </div>;
+};
+export default Landing;
