@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Phone, Clock, User, HandHeart, Users, Eye, List } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Clock, User, HandHeart, Users, Eye, List, Upload, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -50,7 +50,8 @@ export default function HelpBrowse() {
     contactName: '',
     contactPhone: '',
     contactMethod: '',
-    locationAddress: ''
+    locationAddress: '',
+    imageFiles: [] as File[]
   });
 
   const [offerForm, setOfferForm] = useState({
@@ -108,6 +109,32 @@ export default function HelpBrowse() {
     try {
       const phones = requestForm.contactPhone.split(',').map(p => p.trim()).filter(Boolean);
       
+      // Upload images if any
+      const imageUrls: string[] = [];
+      if (requestForm.imageFiles.length > 0) {
+        for (const file of requestForm.imageFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+          const filePath = `${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('help-images')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            toast.error('เกิดข้อผิดพลาดในการอัพโหลดรูปภาพ');
+            continue;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('help-images')
+            .getPublicUrl(filePath);
+          
+          imageUrls.push(publicUrl);
+        }
+      }
+      
       const { error } = await supabase
         .from('help_requests')
         .insert({
@@ -118,7 +145,8 @@ export default function HelpBrowse() {
           contact_name: requestForm.contactName,
           contact_phone: phones.length > 0 ? phones : null,
           contact_method: requestForm.contactMethod || null,
-          location_address: requestForm.locationAddress || null
+          location_address: requestForm.locationAddress || null,
+          image_urls: imageUrls.length > 0 ? imageUrls : null
         });
 
       if (error) throw error;
@@ -132,7 +160,8 @@ export default function HelpBrowse() {
         contactName: '',
         contactPhone: '',
         contactMethod: '',
-        locationAddress: ''
+        locationAddress: '',
+        imageFiles: []
       });
       refetchRequests();
       setActiveTab('view-requests');
@@ -362,6 +391,46 @@ export default function HelpBrowse() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      <Upload className="w-4 h-4 inline mr-1" />
+                      อัพโหลดรูปภาพ (ถ้ามี)
+                    </label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        setRequestForm({ ...requestForm, imageFiles: files });
+                      }}
+                      className="cursor-pointer"
+                    />
+                    {requestForm.imageFiles.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {requestForm.imageFiles.map((file, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Preview ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded border"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newFiles = requestForm.imageFiles.filter((_, i) => i !== index);
+                                setRequestForm({ ...requestForm, imageFiles: newFiles });
+                              }}
+                              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <Button
                     type="submit"
                     disabled={loadingRequest}
@@ -529,6 +598,20 @@ export default function HelpBrowse() {
                       <p className="text-sm text-muted-foreground line-clamp-2">
                         {request.description}
                       </p>
+                      
+                      {request.image_urls && request.image_urls.length > 0 && (
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {request.image_urls.map((url: string, idx: number) => (
+                            <img
+                              key={idx}
+                              src={url}
+                              alt={`รูปภาพ ${idx + 1}`}
+                              className="w-24 h-24 object-cover rounded border cursor-pointer hover:opacity-80"
+                              onClick={() => window.open(url, '_blank')}
+                            />
+                          ))}
+                        </div>
+                      )}
                       
                       {request.help_types && request.help_types.length > 0 && (
                         <div className="flex flex-wrap gap-2">
