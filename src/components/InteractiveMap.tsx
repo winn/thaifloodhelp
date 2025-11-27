@@ -36,7 +36,6 @@ interface InteractiveMapProps {
   showLegend?: boolean
   selectedBasemap?: string
   showFloodLayer?: boolean
-  showFloodDepthLayer?: boolean
   showRescueZoneLayer?: boolean
 }
 
@@ -55,7 +54,6 @@ const InteractiveMap = ({
   showLegend = true,
   selectedBasemap = 'osm',
   showFloodLayer = false,
-  showFloodDepthLayer = false,
   showRescueZoneLayer = false,
 }: InteractiveMapProps) => {
   const mapRef = useRef<L.Map | null>(null)
@@ -63,7 +61,6 @@ const InteractiveMap = ({
   const markersRef = useRef<any>(null)
   const basemapLayerRef = useRef<L.TileLayer | null>(null)
   const floodLayerRef = useRef<L.TileLayer | null>(null)
-  const floodDepthLayerRef = useRef<L.LayerGroup | null>(null)
   const rescueZoneLayerRef = useRef<L.Layer | null>(null)
   const navigate = useNavigate()
 
@@ -123,14 +120,6 @@ const InteractiveMap = ({
     }
 
     if (
-      floodDepthLayerRef.current &&
-      mapRef.current?.hasLayer(floodDepthLayerRef.current) &&
-      (floodDepthLayerRef.current as any).bringToBack
-    ) {
-      ;(floodDepthLayerRef.current as any).bringToBack()
-    }
-
-    if (
       rescueZoneLayerRef.current &&
       mapRef.current?.hasLayer(rescueZoneLayerRef.current) &&
       (rescueZoneLayerRef.current as any).bringToFront
@@ -170,11 +159,8 @@ const InteractiveMap = ({
     map.createPane('floodPane')
     map.getPane('floodPane')!.style.zIndex = '200' // Flood layer in middle
 
-    map.createPane('floodDepthPane')
-    map.getPane('floodDepthPane')!.style.zIndex = '300' // Flood depth layer
-
     map.createPane('rescueZonePane')
-    map.getPane('rescueZonePane')!.style.zIndex = '400' // Rescue zone layer
+    map.getPane('rescueZonePane')!.style.zIndex = '300' // Rescue zone layer
 
     // markerPane already exists with default z-index = 600 (on top)
 
@@ -212,10 +198,6 @@ const InteractiveMap = ({
             <div class="map-legend-item">
               <div class="map-legend-color" style="border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.6);"></div>
               <span>พื้นที่น้ำท่วม (GISTDA)</span>
-            </div>
-            <div class="map-legend-item" style="margin-top: 8px;">
-              <div class="map-legend-color" style="border-color: #0ea5e9; background-color: rgba(14, 165, 233, 0.4);"></div>
-              <span>ความลึกน้ำท่วม (25/11/68)</span>
             </div>
             <div class="map-legend-item" style="margin-top: 8px;">
               <div class="map-legend-color" style="border-color: #f97316; background-color: rgba(249, 115, 22, 0.3);"></div>
@@ -298,92 +280,6 @@ const InteractiveMap = ({
     // Flood layer add/remove can reorder panes; keep overlays in correct order
     ensureKMLLayersOrdering()
   }, [showFloodLayer])
-
-  // Handle flood depth layer (KML) toggle
-  useEffect(() => {
-    if (!mapRef.current) return
-
-    if (showFloodDepthLayer) {
-      // Add flood depth layer if it doesn't exist
-      if (!floodDepthLayerRef.current) {
-        const layer = omnivore
-          .kml('/data/poly_s1a_20251124_0602.kml')
-          .on('ready', function (this: any) {
-            // Move all layers to floodDepthPane
-            this.eachLayer((sublayer: any) => {
-              // Set the pane for each sublayer
-              if (sublayer.options) {
-                sublayer.options.pane = 'floodDepthPane'
-              }
-
-              if (sublayer.feature && sublayer.feature.properties) {
-                const name = sublayer.feature.properties.name || ''
-                // Parse depth value from name
-                const depth = parseFloat(name)
-
-                // Set color based on depth
-                let color = '#0ea5e9'
-                let opacity = 0.3
-
-                if (!isNaN(depth)) {
-                  if (depth > 2) {
-                    color = '#dc2626' // Deep red for >2m
-                    opacity = 0.5
-                  } else if (depth > 1) {
-                    color = '#f97316' // Orange for 1-2m
-                    opacity = 0.4
-                  } else if (depth > 0.5) {
-                    color = '#facc15' // Yellow for 0.5-1m
-                    opacity = 0.35
-                  } else {
-                    color = '#0ea5e9' // Light blue for <0.5m
-                    opacity = 0.3
-                  }
-                }
-
-                sublayer.setStyle({
-                  fillColor: color,
-                  fillOpacity: opacity,
-                  color: color,
-                  weight: 1,
-                  opacity: 0.6,
-                })
-
-                // Add popup with depth info
-                const depthText = !isNaN(depth)
-                  ? `${depth.toFixed(2)} เมตร`
-                  : 'ไม่ทราบ'
-                sublayer.bindPopup(`
-                  <div style="padding: 8px;">
-                    <strong>ความลึกน้ำท่วม</strong><br/>
-                    <span style="font-size: 16px; color: ${color}; font-weight: bold;">${depthText}</span><br/>
-                    <small style="color: #666;">ข้อมูล GISTDA วันที่ 25 พ.ย. 2568</small>
-                  </div>
-                `)
-              }
-            })
-
-            ensureKMLLayersOrdering()
-          })
-          .addTo(mapRef.current)
-
-        floodDepthLayerRef.current = layer
-      } else if (!mapRef.current.hasLayer(floodDepthLayerRef.current)) {
-        floodDepthLayerRef.current.addTo(mapRef.current)
-      }
-    } else {
-      // Remove flood depth layer if it exists
-      if (
-        floodDepthLayerRef.current &&
-        mapRef.current.hasLayer(floodDepthLayerRef.current)
-      ) {
-        mapRef.current.removeLayer(floodDepthLayerRef.current)
-        floodDepthLayerRef.current = null
-      }
-    }
-
-    ensureKMLLayersOrdering()
-  }, [showFloodDepthLayer])
 
   // Handle rescue zone layer toggle (simple tile overlay like flood layer)
   useEffect(() => {
