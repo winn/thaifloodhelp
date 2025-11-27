@@ -100,8 +100,7 @@ const InteractiveMap = ({
   const ensureRescueZoneLayerOnMap = () => {
     if (!mapRef.current || !rescueZoneLayerRef.current || !showRescueZoneLayer) return
 
-    // If the layer ref exists but somehow isn't on the map (Leaflet can drop
-    // overlay layers when panes are re-created), re-attach it.
+    // Re-attach if pane recreation dropped the layer
     if (!mapRef.current.hasLayer(rescueZoneLayerRef.current)) {
       rescueZoneLayerRef.current.addTo(mapRef.current)
     }
@@ -287,8 +286,11 @@ const InteractiveMap = ({
 
     // Helper: build the KML layer fresh (used on first load or if a stale ref is detected)
     const buildRescueLayer = () => {
+      // Respect Vite base path (prevents 404 when app served under sub-path)
+      const rescueKmlUrl = `${import.meta.env.BASE_URL || '/'}data/Hat_Yai_Rescue.kml`
+
       const kmlLayer = omnivore
-        .kml('/data/Hat_Yai_Rescue.kml', null, L.geoJSON(null, { pane: 'rescueZonePane' }))
+        .kml(rescueKmlUrl, null, L.geoJSON(null, { pane: 'rescueZonePane' }))
         .on('ready', function (this: any) {
           // Style and popup for every sub‑layer after the KML has been parsed
           this.eachLayer((sublayer: any) => {
@@ -317,6 +319,10 @@ const InteractiveMap = ({
             }
           })
         })
+        .on('error', () => {
+          // Allow re-toggle to retry if fetch fails
+          rescueZoneLayerRef.current = null
+        })
         .addTo(mapRef.current!)
 
       rescueZoneLayerRef.current = kmlLayer
@@ -324,18 +330,14 @@ const InteractiveMap = ({
     }
 
     if (showRescueZoneLayer) {
-      const layerMissing =
-        !rescueZoneLayerRef.current ||
-        !mapRef.current.hasLayer(rescueZoneLayerRef.current)
-
-      // If Leaflet dropped the layer (e.g., after pane re-creation) rebuild it
-      if (layerMissing) {
-        // Clear stale reference before re-creating
+      // Always rebuild when toggled on to guarantee a fresh, attached layer
+      if (rescueZoneLayerRef.current) {
+        if (mapRef.current.hasLayer(rescueZoneLayerRef.current)) {
+          mapRef.current.removeLayer(rescueZoneLayerRef.current)
+        }
         rescueZoneLayerRef.current = null
-        buildRescueLayer()
-      } else {
-        ensureRescueZoneLayerOnMap()
       }
+      buildRescueLayer()
     } else {
       // Remove rescue zone layer if it exists; always clear the ref so the next toggle forces a fresh load
       if (rescueZoneLayerRef.current) {
