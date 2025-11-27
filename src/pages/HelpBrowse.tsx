@@ -242,15 +242,6 @@ export default function HelpBrowse() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          กลับหน้าหลัก
-        </Button>
-
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
             ขอความช่วยเหลือ
