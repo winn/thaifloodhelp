@@ -98,7 +98,7 @@ const Landing = () => {
           ) : (
             <>
               <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white mb-6 md:mb-8 font-medium px-4 max-w-4xl mx-auto drop-shadow-md [text-shadow:_0_1px_8px_rgb(0_0_0_/_50%)]">
-                แพลตฟอร์มเชื่อมโยงผู้ประสบภัยกับอาสาสมัคร
+                เชื่อมโยงผู้ประสบภัยกับอาสาสมัคร
                 <br />
                 โพสต์ความต้องการหรือเสนอความช่วยเหลือ
                 เพื่อฟื้นฟูชีวิตหลังน้ำลด
