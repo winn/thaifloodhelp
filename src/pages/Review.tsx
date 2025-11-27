@@ -134,6 +134,27 @@ const Review = () => {
     }
   }
 
+  /*
+  normalizeCoordinate คือฟังก์ชันช่วยแปลงค่าพิกัดให้ปลอดภัยก่อนบันทึก โดยตรรกะคือ:
+  - รับค่าเป็นสตริง ตัวเลข null หรือ undefined
+ - ถ้าเป็น null/undefined หรือสตริงว่าง คืน null
+ - ถ้าเป็นสตริงที่ไม่ว่าง จะ parseFloat แล้วเช็กว่าเป็นตัวเลข finite หรือไม่
+ - ถ้าเป็นตัวเลขอยู่แล้ว จะเช็กด้วย Number.isFinite
+
+ ผลลัพธ์: ถ้าตัวเลขถูกต้องจะคืนตัวเลขนั้น ถ้าไม่ถูกต้องจะคืน null
+จึงช่วยตัดค่าที่แปลงเป็น NaN ออกไป ไม่ให้ถูกส่งเข้า Supabase และหลีกเลี่ยงข้อมูลพิกัดผิดรูป.
+*/
+  const normalizeCoordinate = (value: string | number | null | undefined) => {
+    if (value === null || value === undefined) return null
+    if (typeof value === 'string') {
+      const trimmed = value.trim()
+      if (!trimmed) return null
+      const parsed = parseFloat(trimmed)
+      return Number.isFinite(parsed) ? parsed : null
+    }
+    return Number.isFinite(value) ? value : null
+  }
+
   const performSave = async () => {
     if (!formData) return
 
@@ -160,12 +181,8 @@ const Review = () => {
       // 1. Existing lat/long
       // 2. Parse map_link if present
       // 3. Geocode address if present
-      const finalLat = formData.location_lat
-        ? parseFloat(formData.location_lat)
-        : null
-      const finalLng = formData.location_long
-        ? parseFloat(formData.location_long)
-        : null
+      const finalLat = normalizeCoordinate(formData.location_lat)
+      const finalLng = normalizeCoordinate(formData.location_long)
       const finalMapLink = formData.map_link || null
 
       // Generate embedding for the report

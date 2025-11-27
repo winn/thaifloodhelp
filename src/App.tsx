@@ -53,7 +53,7 @@ const AppContent = () => {
       }
     >
       <Navbar />
-      <div className={isMapPage ? 'flex-1 overflow-hidden' : 'flex-1'}>
+      <div className={isMapPage ? 'flex-1 overflow-hidden mt-16' : 'flex-1 mt-16'}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />

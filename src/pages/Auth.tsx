@@ -14,14 +14,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLiff } from '@/contexts/LiffContext'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
+import { ErrorUtils } from '@/utils/ErrorUtils'
 
 const Auth = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { toast } = useToast()
   const { user } = useAuth()
+  const {
+    isLiffInitialized,
+    isLoading: isLiffLoading,
+    login: liffLogin,
+  } = useLiff()
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -63,10 +70,10 @@ const Auth = () => {
       setEmail('')
       setPassword('')
       setFullName('')
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'เกิดข้อผิดพลาด',
-        description: error.message,
+        description: ErrorUtils.getErrorMessage(error),
         variant: 'destructive',
       })
     } finally {
@@ -91,13 +98,14 @@ const Auth = () => {
       })
 
       navigate(from)
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = ErrorUtils.getErrorMessage(error)
       toast({
         title: 'เกิดข้อผิดพลาด',
         description:
-          error.message === 'Invalid login credentials'
+          message === 'Invalid login credentials'
             ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
-            : error.message,
+            : message,
         variant: 'destructive',
       })
     } finally {
@@ -116,10 +124,10 @@ const Auth = () => {
       })
 
       if (error) throw error
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'เกิดข้อผิดพลาด',
-        description: error.message,
+        description: ErrorUtils.getErrorMessage(error),
         variant: 'destructive',
       })
       setLoading(false)
@@ -127,9 +135,8 @@ const Auth = () => {
   }
 
   const handleLineSignIn = () => {
-    if (isLiffInitialized) {
-      liffLogin()
-    }
+    if (!isLiffInitialized) return
+    liffLogin()
   }
 
   return (

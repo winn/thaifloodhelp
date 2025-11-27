@@ -171,7 +171,7 @@ https://miniapp.line.me/2008569116-rGyQw3mA
   }
 
   const isShareAvailable =
-    isLiffInitialized && (liff.isApiAvailable?.('shareTargetPicker') || true)
+    isLiffInitialized && (liff.isApiAvailable?.('shareTargetPicker') || false)
 
   return (
     <LiffContext.Provider

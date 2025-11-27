@@ -3,6 +3,8 @@ import 'leaflet'
 import 'leaflet.markercluster'
 
 import L from 'leaflet'
+// @ts-ignore - leaflet-omnivore doesn't have TypeScript definitions
+import omnivore from 'leaflet-omnivore'
 // Fix for default marker icon issue with Webpack
 import icon from 'leaflet/dist/images/marker-icon.png'
 import iconShadow from 'leaflet/dist/images/marker-shadow.png'
@@ -34,6 +36,7 @@ interface InteractiveMapProps {
   showLegend?: boolean
   selectedBasemap?: string
   showFloodLayer?: boolean
+  showRescueZoneLayer?: boolean
 }
 
 const URGENCY_COLORS = {
@@ -51,12 +54,14 @@ const InteractiveMap = ({
   showLegend = true,
   selectedBasemap = 'osm',
   showFloodLayer = false,
+  showRescueZoneLayer = false,
 }: InteractiveMapProps) => {
   const mapRef = useRef<L.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const markersRef = useRef<any>(null)
   const basemapLayerRef = useRef<L.TileLayer | null>(null)
   const floodLayerRef = useRef<L.TileLayer | null>(null)
+  const rescueZoneLayerRef = useRef<L.Layer | null>(null)
   const navigate = useNavigate()
 
   // Ensure marker cluster is attached to the map (useful after basemap/flood toggles)
@@ -71,6 +76,11 @@ const InteractiveMap = ({
         markersRef.current.refreshClusters()
       }
     }
+
+    // Always keep markers above overlays
+    if (markersRef.current.bringToFront) {
+      markersRef.current.bringToFront()
+    }
   }
 
   // Ensure flood overlay stays mounted when swapping basemaps
@@ -84,6 +94,40 @@ const InteractiveMap = ({
     } else if (floodLayerRef.current.bringToFront) {
       floodLayerRef.current.bringToFront()
     }
+  }
+
+  // Ensure rescue zone overlay stays mounted when swapping basemaps
+  const ensureRescueZoneLayerOnMap = () => {
+    if (!mapRef.current || !rescueZoneLayerRef.current || !showRescueZoneLayer) return
+
+    // If the layer ref exists but somehow isn't on the map (Leaflet can drop
+    // overlay layers when panes are re-created), re-attach it.
+    if (!mapRef.current.hasLayer(rescueZoneLayerRef.current)) {
+      rescueZoneLayerRef.current.addTo(mapRef.current)
+    }
+
+    if ((rescueZoneLayerRef.current as any).bringToFront) {
+      ;(rescueZoneLayerRef.current as any).bringToFront()
+    }
+  }
+
+  // Keep KML overlays ordered and present
+  const ensureKMLLayersOrdering = () => {
+    ensureRescueZoneLayerOnMap()
+
+    if (floodLayerRef.current && mapRef.current?.hasLayer(floodLayerRef.current)) {
+      if (floodLayerRef.current.bringToBack) floodLayerRef.current.bringToBack()
+    }
+
+    if (
+      rescueZoneLayerRef.current &&
+      mapRef.current?.hasLayer(rescueZoneLayerRef.current) &&
+      (rescueZoneLayerRef.current as any).bringToFront
+    ) {
+      ;(rescueZoneLayerRef.current as any).bringToFront()
+    }
+
+    ensureMarkersOnMap()
   }
 
   useEffect(() => {
@@ -114,6 +158,9 @@ const InteractiveMap = ({
 
     map.createPane('floodPane')
     map.getPane('floodPane')!.style.zIndex = '200' // Flood layer in middle
+
+    map.createPane('rescueZonePane')
+    map.getPane('rescueZonePane')!.style.zIndex = '300' // Rescue zone layer
 
     // markerPane already exists with default z-index = 600 (on top)
 
@@ -152,6 +199,10 @@ const InteractiveMap = ({
               <div class="map-legend-color" style="border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.6);"></div>
               <span>พื้นที่น้ำท่วม (GISTDA)</span>
             </div>
+            <div class="map-legend-item" style="margin-top: 8px;">
+              <div class="map-legend-color" style="border-color: #f97316; background-color: rgba(249, 115, 22, 0.3);"></div>
+              <span>โซนช่วยเหลือหาดใหญ่</span>
+            </div>
           </div>
         `
         return div
@@ -187,9 +238,9 @@ const InteractiveMap = ({
 
     basemapLayerRef.current = newBasemapLayer
 
-    // Basemap swaps can occasionally unset overlay layers; make sure markers stay mounted
-    ensureMarkersOnMap()
+    // Basemap swaps can occasionally unset overlay layers; make sure everything stays mounted
     ensureFloodLayerOnMap()
+    ensureKMLLayersOrdering()
   }, [selectedBasemap])
 
   // Handle flood layer toggle
@@ -226,9 +277,85 @@ const InteractiveMap = ({
       }
     }
 
-    // Flood layer add/remove can occasionally reorder panes; ensure markers remain visible
-    ensureMarkersOnMap()
+    // Flood layer add/remove can reorder panes; keep overlays in correct order
+    ensureKMLLayersOrdering()
   }, [showFloodLayer])
+
+  // Handle rescue zone layer toggle (simple tile overlay like flood layer)
+  useEffect(() => {
+    if (!mapRef.current) return
+
+    // Helper: build the KML layer fresh (used on first load or if a stale ref is detected)
+    const buildRescueLayer = () => {
+      const kmlLayer = omnivore
+        .kml('/data/Hat_Yai_Rescue.kml', null, L.geoJSON(null, { pane: 'rescueZonePane' }))
+        .on('ready', function (this: any) {
+          // Style and popup for every sub‑layer after the KML has been parsed
+          this.eachLayer((sublayer: any) => {
+            if (sublayer.setStyle) {
+              sublayer.setStyle({
+                pane: 'rescueZonePane',
+                fillColor: '#f97316',
+                fillOpacity: 0.25,
+                color: '#f97316',
+                weight: 2,
+                opacity: 0.7,
+              })
+            }
+
+            // Attach popup from feature properties
+            if (sublayer.feature && sublayer.feature.properties && sublayer.bindPopup) {
+              const name = sublayer.feature.properties.name || 'โซนช่วยเหลือ'
+              const description = sublayer.feature.properties.description || ''
+              sublayer.bindPopup(`
+                <div style="padding: 8px;">
+                  <strong>${name}</strong><br/>
+                  ${description ? `<p style="margin-top: 4px; font-size: 13px;">${description}</p>` : ''}
+                  <small style="color: #666;">โซนช่วยเหลืออำเภอหาดใหญ่<br/>อัพเดท 25 พ.ย. 2568</small>
+                </div>
+              `)
+            }
+          })
+        })
+        .addTo(mapRef.current!)
+
+      rescueZoneLayerRef.current = kmlLayer
+      ensureRescueZoneLayerOnMap()
+    }
+
+    if (showRescueZoneLayer) {
+      const layerMissing =
+        !rescueZoneLayerRef.current ||
+        !mapRef.current.hasLayer(rescueZoneLayerRef.current)
+
+      // If Leaflet dropped the layer (e.g., after pane re-creation) rebuild it
+      if (layerMissing) {
+        // Clear stale reference before re-creating
+        rescueZoneLayerRef.current = null
+        buildRescueLayer()
+      } else {
+        ensureRescueZoneLayerOnMap()
+      }
+    } else {
+      // Remove rescue zone layer if it exists; always clear the ref so the next toggle forces a fresh load
+      if (rescueZoneLayerRef.current) {
+        if (mapRef.current.hasLayer(rescueZoneLayerRef.current)) {
+          mapRef.current.removeLayer(rescueZoneLayerRef.current)
+        }
+        rescueZoneLayerRef.current = null
+      }
+    }
+
+    // Markers can occasionally get hidden behind KML; ensure they stay on top
+    ensureKMLLayersOrdering()
+  }, [showRescueZoneLayer])
+
+  // When other overlays or basemap change, make sure the rescue layer stays attached
+  useEffect(() => {
+    if (showRescueZoneLayer) {
+      ensureRescueZoneLayerOnMap()
+    }
+  }, [showFloodLayer, selectedBasemap])
 
   // Update markers when reports change
   useEffect(() => {
