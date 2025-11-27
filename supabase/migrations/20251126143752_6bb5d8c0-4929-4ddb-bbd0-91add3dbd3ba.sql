@@ -16,6 +16,8 @@ CREATE INDEX IF NOT EXISTS idx_line_sessions_updated_at ON public.line_sessions(
 ALTER TABLE public.line_sessions ENABLE ROW LEVEL SECURITY;
 
 -- Allow service role full access (for Edge Functions)
+-- Allow service role full access (for Edge Functions)
+DROP POLICY IF EXISTS "Service role can manage line_sessions" ON public.line_sessions;
 CREATE POLICY "Service role can manage line_sessions" ON public.line_sessions
   FOR ALL
   USING (true)
