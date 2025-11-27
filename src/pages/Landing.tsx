@@ -1,9 +1,14 @@
-import { motion } from 'framer-motion';
-import { MessageSquarePlus, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import heroFlood from '@/assets/hero-flood.jpg';
-import { Button } from '@/components/ui/button';
-import { useLandingStats } from '@/hooks/use-stats';
+import { motion } from 'framer-motion'
+import { MessageSquarePlus, Search } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+
+import heroFlood from '@/assets/hero-flood.jpg'
+import { Button } from '@/components/ui/button'
+import { useLandingStats } from '@/hooks/use-stats'
+import { useEffect, useState } from 'react'
+
+
+
 const Landing = () => {
   const navigate = useNavigate();
   const {
@@ -31,10 +36,40 @@ const Landing = () => {
     },
     visible: {
       y: 0,
-      opacity: 1
+      opacity: 1,
+    },
+  }
+
+  const [hatyaiRainfall, setHatyaiRainfall] = useState<number | string>('กำลังโหลด...')
+
+  useEffect(() => {
+    let mounted = true
+
+    const fetchRainfall = async () => {
+      try {
+        const res = await fetch(
+          'https://api.open-meteo.com/v1/forecast?latitude=7.0084&longitude=100.4767&current=precipitation&timezone=Asia%2FBangkok&forecast_days=1'
+        )
+        const data = await res.json()
+        const rainfall = data?.current?.precipitation ?? 'N/A'
+        if (mounted) setHatyaiRainfall(rainfall)
+      } catch (error) {
+        console.error('Error fetching rainfall data:', error)
+        if (mounted) setHatyaiRainfall('N/A')
+      }
     }
-  };
-  return <div className="min-h-screen">
+
+    fetchRainfall()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const getHatyaiRainfall = () => hatyaiRainfall
+
+  return (
+    <div className="min-h-screen">
       {/* Hero Section with Background Image */}
       <section className="relative overflow-hidden py-12 md:py-16 px-4 min-h-[calc(100vh-4rem)] flex items-center bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroFlood})` }}
@@ -56,6 +91,13 @@ const Landing = () => {
 
           <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-white/80 mb-4 md:mb-6 px-4">
             ทุกวินาที • มีคนรอความช่วยเหลือ
+          </motion.p>
+
+          <motion.p
+            variants={itemVariants}
+            className="text-sm sm:text-base md:text-lg text-white/80 mb-4 md:mb-6 px-4"
+          >
+            หาดใหญ่ ปริมาณน้ำฝนรายชั่วโมง {getHatyaiRainfall()} มม.
           </motion.p>
 
           {/* Technology Badges */}
