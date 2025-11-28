@@ -216,7 +216,7 @@ const Api = () => {
     setSaveResponse('')
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api-v1-save`, {
+      const response = await fetch(`${API_BASE_URL}/api-v1-save-mock`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -551,9 +551,12 @@ X-API-Key: your_api_key_here`}
                 <div className="flex items-center gap-2">
                   <Badge>POST</Badge>
                   <code className="text-sm">/api-v1-save</code>
+                  <Badge variant="secondary" className="text-xs">
+                    Mock Mode
+                  </Badge>
                 </div>
                 <CardDescription>
-                  บันทึกข้อมูลที่ตรวจสอบแล้วลงในฐานข้อมูล
+                  ทดสอบบันทึกข้อมูล (จำลองการทำงาน - ไม่บันทึกลงฐานข้อมูลจริง)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -586,7 +589,7 @@ X-API-Key: your_api_key_here`}
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="font-semibold">ทดสอบ API</h3>
+                  <h3 className="font-semibold">ทดสอบ API (Mock)</h3>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">API Key</label>
                     <Input
@@ -618,11 +621,11 @@ X-API-Key: your_api_key_here`}
                       className="flex-1"
                     >
                       {saveLoading ? (
-                        'กำลังบันทึก...'
+                        'กำลังบันทึก (Mock)...'
                       ) : (
                         <>
                           <Send className="mr-2 h-4 w-4" />
-                          ส่งคำขอ
+                          ส่งคำขอ (Mock)
                         </>
                       )}
                     </Button>
@@ -642,14 +645,18 @@ X-API-Key: your_api_key_here`}
 
             <Card>
               <CardHeader>
-                <CardTitle>Example cURL</CardTitle>
+                <CardTitle>Example cURL (Mock)</CardTitle>
               </CardHeader>
               <CardContent>
                 <pre className="bg-muted p-4 rounded text-sm overflow-x-auto">
-                  {`curl -X POST '${API_BASE_URL}/api-v1-save' \\
+                  {`curl -X POST '${API_BASE_URL}/api-v1-save-mock' \\
   -H 'Content-Type: application/json' \\
   -d '${saveExample.replace(/\n/g, '').replace(/\s+/g, ' ')}'`}
                 </pre>
+                <p className="text-sm text-muted-foreground mt-2">
+                  หมายเหตุ: สำหรับการใช้งานจริง ให้เปลี่ยน endpoint เป็น{' '}
+                  <code className="bg-muted px-1 rounded">/api-v1-save</code>
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
