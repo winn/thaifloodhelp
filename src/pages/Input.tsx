@@ -28,21 +28,22 @@ const Input = () => {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
-  const {
-    isLoggedIn,
-    profile,
-    isLoading: isLiffLoading,
-    isInLiffClient,
-    shareTargetPicker,
-    isShareAvailable,
-  } = useLiff()
+  const { isLoggedIn, profile, shareTargetPicker, getLIFFUrl } = useLiff()
 
   const handleShare = async () => {
     try {
-      await shareTargetPicker()
-      toast.success('ขอบคุณที่ช่วยแชร์ครับ')
+      const shareUrl = await getLIFFUrl()
+      const result = await shareTargetPicker({
+        text: `ช่วยกันส่งข้อมูลน้ำท่วมผ่าน AI Platform นี้ครับ\nหากพบโพสต์ขอความช่วยเหลือในโซเชียลฯ ฝากนำมากรอกในลิงก์นี้ เพื่อให้ข้อมูลเป็นระบบและช่วยเหลือได้ไวขึ้นครับ\n\n${shareUrl}\n#น้ำท่วม #TechForGood #ThaiFloodHelp #น้ำท่วมไทย`,
+      })
+      if (result) {
+        toast.success('ขอบคุณที่ช่วยแชร์ครับ')
+      } else {
+        toast.error('แชร์ไม่สำเร็จ กรุณาลองใหม่อีกครั้งครับ')
+      }
     } catch (err) {
       console.error('Share error:', err)
+      toast.error('เกิดข้อผิดพลาดในการแชร์ กรุณาลองใหม่อีกครั้งครับ')
     }
   }
 
